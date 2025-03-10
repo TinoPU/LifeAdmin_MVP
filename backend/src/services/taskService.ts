@@ -1,17 +1,14 @@
-interface Task {
-    description: string;
-    dueTime: string;
-    status: string;
-}
+import supabase from "../database/client"
+import { Task } from "../types/db";
 
-export async function createTask(description: string, dueTime: string): Promise<Task> {
-    const newTask: Task = {
-        description,
-        dueTime,
-        status: "pending",
-    };
+export const createTask = async (task: Omit<Task, "id">) => {
+    const { data, error } = await supabase.from("tasks").insert([task]).select();
+    if (error) throw error;
+    return data;
+};
 
-    // For now, we simply log the task and return it
-    console.log("Task created:", newTask);
-    return newTask;
-}
+export const getTasksForUser = async (userId: string) => {
+    const { data, error } = await supabase.from("tasks").select("*").eq("user_id", userId);
+    if (error) throw error;
+    return data;
+};
