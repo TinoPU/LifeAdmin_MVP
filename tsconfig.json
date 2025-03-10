@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "outDir": "./dist",           // Compiled JS files will go into the dist/ directory
+    "rootDir": "./src",           // All source TS files will go in the src/ directory
+    "strict": true,               // Enable strict type-checking options
+    "esModuleInterop": true,      // Allow default imports from modules without default exports
+    "skipLibCheck": true,         // Skip type-checking of declaration files
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],        // Include all files in the src folder
+  "exclude": ["node_modules"]     // Exclude node_modules from compilation
+}
