@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import taskRoutes from "./api/tasks";
+import supabase from "./database/client";
 
 // Load environment variables
 dotenv.config();
