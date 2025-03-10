@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import taskRoutes from "./api/tasks";
-import supabase from "./database/client";
+import webhookRoutes from "./api/webhooks";
 
 // Load environment variables
 dotenv.config();
@@ -11,6 +11,7 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/tasks", taskRoutes);
+app.use("/api/webhooks", webhookRoutes)
 
 // Sample endpoint for testing
 app.get("/", (req: Request, res: Response) => {
