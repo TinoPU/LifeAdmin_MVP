@@ -5,12 +5,14 @@ import {Message, wa_metadata} from "../types/message";
 
 export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: string, actor:string, parent_message_id?: string, response?: string, response_sent_at?: string) {
     try {
+        const messageSentAt = new Date(parseInt(message.timestamp, 10) * 1000).toISOString();
+
 
         // 🌟 Construct base message object for storage
         const messageData:Message = {
             user_id: user_id,
             message: message.text?.body || "",
-            message_sent_at: message.timestamp,
+            message_sent_at: messageSentAt,
             response: response,
             actor: actor,
             parent_message_id: parent_message_id,
