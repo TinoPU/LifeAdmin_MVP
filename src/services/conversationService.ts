@@ -9,7 +9,7 @@ class ConversationService {
     }
     async generateResponse(user_id: string) {
         const conversationHistory = await this.getRecentMessages(user_id); // Fetch context
-        return generateUserMessageResponse(conversationHistory.toString());
+        return generateUserMessageResponse(JSON.stringify(conversationHistory));
     }
 }
 
