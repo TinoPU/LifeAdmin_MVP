@@ -11,6 +11,7 @@ export const handleIncomingWebhook = async (payload: WAIncomingObject) => {
 
     if (messageObject.text) {
         await cacheWhatsappMessage(user_id, "user", messageObject.text?.body, messageObject.timestamp)
+        console.log("cached message: ", messageObject.text)
         const response_message = await ConversationService.generateResponse(user_id) || "Sorry ich kann grad nicht. 🤒"
         await sendMessage(messageObject.from, response_message)
         const timeNow = new Date().toISOString();
