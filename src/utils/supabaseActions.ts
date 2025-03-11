@@ -118,6 +118,7 @@ export async function createNewUser(contact: Contact, phone_number_id: string) {
     console.log("Tried to create user: ", data)
 
     if (error) {
+        console.log(error)
         throw new Error("Failed to create new user");
     }
 
