@@ -1,9 +1,11 @@
 export type UUID = string;
 
 export interface User {
-    id: UUID;
+    id?: UUID;
     created_at?: string;
-    phone_number: string;
+    phone_number?: string;
+    phone_number_id: string
+    wa_id?: string;
     name?: string;
     preferences?: Record<string, any>; // Optional JSON field
     updated_at?: string
@@ -18,6 +20,7 @@ export interface Task {
     due_time: string; // Store as ISO 8601 string
     status: "pending" | "completed" | "canceled";
     source: "whatsapp" | "email" | "calendar";
+    source_id?: UUID;
     type?: string;
     priority_level?: number;
     location?: string;
@@ -34,13 +37,4 @@ export interface Reminder {
     reminder_time: string;
     status: "scheduled" | "sent" | "cancelled";
     updated_at?: string
-}
-
-export interface Conversation {
-    id: UUID;
-    created_at?: string;
-    session_id?: UUID;
-    user_id?: UUID;
-    message: string;
-    response?: string;
 }

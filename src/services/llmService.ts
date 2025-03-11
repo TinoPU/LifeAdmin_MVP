@@ -6,7 +6,7 @@ dotenv.config()
 
 const anthropic = new Anthropic();
 
-export async function messageLLM(userMessage: string) {
+export async function generateUserMessageResponse(userMessage: string) {
     try {
         const msg = await anthropic.messages.create({
             model: "claude-3-7-sonnet-20250219",
@@ -36,4 +36,4 @@ export async function messageLLM(userMessage: string) {
     }
 }
 
-export default messageLLM
+export default generateUserMessageResponse

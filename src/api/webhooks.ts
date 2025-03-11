@@ -1,6 +1,5 @@
 import express, { Request, Response } from "express";
-import sendMessage from "../services/messageService";
-import messageLLM from "../services/llmService";
+import {handleIncomingWebhook} from "../services/webhookService";
 
 const router = express.Router();
 
@@ -8,13 +7,7 @@ router.post("/", async (req: Request, res: Response) => {
     try {
 
         const body = req.body;
-        const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-        const from = message.from; // Sender's phone number
-        const text = message.text?.body || ""; // Message content
-
-        console.log(`📩 Received message from ${from}: "${text}"`);
-        const agentResponse = await messageLLM(text)
-        await sendMessage(from, `${agentResponse}`);
+        await handleIncomingWebhook(body)
         res.status(200).send({ status: "Message processed." });
     }
     catch (err) {

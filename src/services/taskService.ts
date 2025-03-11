@@ -1,4 +1,4 @@
-import supabase from "../database/client"
+import supabase from "../database/supabaseClient"
 import {Task, UUID} from "../types/db";
 
 export const createTask = async (task: Omit<Task, "id">) => {

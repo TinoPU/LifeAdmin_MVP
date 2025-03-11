@@ -2,8 +2,6 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import taskRoutes from "./api/tasks";
 import webhookRoutes from "./api/webhooks";
-import messageLLM from "./services/llmService";
-
 // Load environment variables
 dotenv.config();
 
