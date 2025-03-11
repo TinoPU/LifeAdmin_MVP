@@ -3,7 +3,7 @@ import supabase from "../database/supabaseClient";
 import {Contact} from "../types/incomingWAObject/WAIncomingValueObject";
 import {Message, wa_metadata} from "../types/message";
 
-export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: string, actor:string, parent_message_id?: string, response?: string, response_sent_at?: string) {
+export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: string, actor:string, response?: string, response_sent_at?: string, parent_message_id?: string) {
     try {
         const messageSentAt = new Date(parseInt(message.timestamp, 10) * 1000).toISOString();
 
