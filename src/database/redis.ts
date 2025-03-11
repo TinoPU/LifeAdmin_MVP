@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config()
 
 const redisClient = createClient({
-    url: process.env.REDIS_URL, // Make sure this is set in .env
+    url: process.env.REDIS_REDIS_URL, // Make sure this is set in .env
 });
 
 redisClient.on('error', (err) => console.error('Redis Client Error', err));
