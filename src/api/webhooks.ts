@@ -14,7 +14,7 @@ router.post("/", async (req: Request, res: Response) => {
 
         console.log(`📩 Received message from ${from}: "${text}"`);
         const agentResponse = await messageLLM(text)
-        await sendMessage(from, `Hi there! You said: "${agentResponse}"`);
+        await sendMessage(from, `${agentResponse}`);
         res.status(200).send({ status: "Message processed." });
     }
     catch (err) {
