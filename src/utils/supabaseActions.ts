@@ -63,7 +63,7 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: 
         const { data, error: msgError } = await supabase
             .from("messages")
             .insert([messageData])
-            .select("id")
+            .select("id").single()
         if (msgError) {
             console.error("Insert error:", msgError);
         }
@@ -76,6 +76,7 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: 
         }
 
         const message_id = data.id;
+        console.log(message_id, data)
 
         // Merge the original waMetadata with the message_id property
         const waMetadataToInsert = {
