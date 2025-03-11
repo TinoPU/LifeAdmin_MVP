@@ -108,9 +108,9 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: 
     }
 }
 
-export async function createNewUser(contact: Contact, phone_number_id: string) {
+export async function createNewUser(contact: Contact) {
     const user = {
-        phone_number_id: phone_number_id,
+        wa_user_id: contact.user_id,
         wa_id: contact.wa_id,
         name: contact.profile.name
     }

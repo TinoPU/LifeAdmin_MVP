@@ -4,7 +4,7 @@ import supabase from "../database/supabaseClient";
 import {createNewUser} from "./supabaseActions";
 
 
-export async function fetchUserId(contact: Contact, phone_number_id: string) {
+export async function fetchUserId(contact: Contact) {
     const wa_user_id = contact.wa_id
     const redisKey = `user:${wa_user_id}`;
 
@@ -25,7 +25,7 @@ export async function fetchUserId(contact: Contact, phone_number_id: string) {
     if (error || !data) {
         console.log("User not found in DB. Creating new user...");
         // 3. Create user if they don't exist
-        const newUser = await createNewUser(contact, phone_number_id);
+        const newUser = await createNewUser(contact);
         return newUser.id;
     }
     // 4. Store user_id in Redis for future requests

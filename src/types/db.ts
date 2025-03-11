@@ -4,7 +4,7 @@ export interface User {
     id?: UUID;
     created_at?: string;
     phone_number?: string;
-    phone_number_id: string
+    wa_user_id?: string
     wa_id?: string;
     name?: string;
     preferences?: Record<string, any>; // Optional JSON field
