@@ -115,7 +115,6 @@ export async function createNewUser(contact: Contact) {
         name: contact.profile.name
     }
     const {data, error} = await supabase.from("users").insert([user]).select("id").single();
-    console.log("Tried to create user: ", data)
 
     if (error) {
         console.log(error)
