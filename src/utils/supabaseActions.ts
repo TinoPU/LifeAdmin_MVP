@@ -76,8 +76,6 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: 
         }
 
         const message_id = data.id;
-        console.log(message_id, data)
-
         // Merge the original waMetadata with the message_id property
         const waMetadataToInsert = {
             ...waMetadata,
