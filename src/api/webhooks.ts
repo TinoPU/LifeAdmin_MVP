@@ -20,19 +20,21 @@ router.post("/", async (req: Request, res: Response) => {
     }
 });
 
-router.get("/verify", (req: Request, res: Response) => {
-    const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
-    const { "hub.mode": mode, "hub.verify_token": token, "hub.challenge": challenge } = req.query;
 
-    if (mode === "subscribe" && token === VERIFY_TOKEN) {
-        console.log("✅ Webhook verified!");
-        res.status(200).send(challenge);
+const VERIFY_TOKEN = 'ueE9GzcD436Cw$Ptgna#';  // Replace with your actual token
+router.get('/', (req, res) => {
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    // Check if the token matches
+    if (mode && token === VERIFY_TOKEN) {
+        console.log("Webhook verified!");
+        res.status(200).send(challenge); // Respond with the challenge
     } else {
-        res.status(403).send("Verification failed.");
+        res.status(403).send('Verification failed');
     }
 });
-
-
 
 
 export default router;
