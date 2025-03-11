@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import sendMessage from "../services/messageService";
+import messageLLM from "../services/llmService";
 
 const router = express.Router();
 
@@ -12,7 +13,8 @@ router.post("/", async (req: Request, res: Response) => {
         const text = message.text?.body || ""; // Message content
 
         console.log(`📩 Received message from ${from}: "${text}"`);
-        await sendMessage(from, `Hi there! You said: "${text}"`);
+        const agentResponse = await messageLLM(text)
+        await sendMessage(from, `Hi there! You said: "${agentResponse}"`);
         res.status(200).send({ status: "Message processed." });
     }
     catch (err) {
