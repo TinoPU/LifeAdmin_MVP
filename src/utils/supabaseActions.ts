@@ -62,8 +62,10 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: 
             .from("messages")
             .insert([messageData])
             .select("id")
-            .single();
-        if (msgError) console.log(msgError.message)
+        if (msgError) {
+            console.error("Insert error:", msgError);
+        }
+
 
         if (!data)
         {
