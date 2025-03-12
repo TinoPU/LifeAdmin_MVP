@@ -112,7 +112,7 @@ Remember to always provide structured JSON output as requested by the user. Resp
                     "content": [
                         {
                             "type": "text",
-                            "text": "Requested JSON Output:"
+                            "text": "Requested JSON Output: {"
                         }
                     ]
                 }
@@ -123,7 +123,7 @@ Remember to always provide structured JSON output as requested by the user. Resp
             .map(block => block.text)
             .join(" ");
         console.log("model response: ",responseText)
-        return JSON.parse(responseText);
+        return JSON.parse("{" + responseText);
     } catch (error) {
         console.error("Error in callLLMOrchestration:", error);
         return { tool: "none", parameters: {}, response: "Sorry, ich bin grad AFK" };
