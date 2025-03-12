@@ -93,7 +93,7 @@ Remember to always provide structured JSON output as requested by the user. Resp
 
         const msg = await anthropic.messages.create({
             model: "claude-3-7-sonnet-20250219",
-            max_tokens: 1000,
+            max_tokens: 5000,
             temperature: 0.8,
             system: "Never respond with anything in additional to the JSON.",
             messages: [
@@ -136,44 +136,86 @@ Remember to always provide structured JSON output as requested by the user. Resp
 
 export async function callLLMToolFeedback(userMessage: string, history: any[], selectedTool: ToolSchema | string, parameters:any[], executionResult:ToolResult) {
     try {
-        const prompt = `
-        ### User’s Message:
-        ${userMessage}
+        const prompt: string = `You are an AI assistant designed to help users by executing tools and providing responses in a conversational context. Your task is to process the given information, determine the appropriate action, and respond in a structured JSON format.
+Here's the information you need to consider:
+<latest_message>
+${userMessage}
+</latest_message>
 
-        ### Conversation History:
-        ${JSON.stringify(history, null, 2)}
+<conversation_history>
+${history}
+</conversation_history>
 
-        ### Selected Tool:
-        ${JSON.stringify(selectedTool, null,2)}
+<selected_tool>
+${selectedTool}
+</selected_tool>
 
-        ### Tool Parameters:
-        ${JSON.stringify(parameters, null, 2)}
+<tool_parameters>
+${parameters}
+</tool_parameters>
 
-        ### Tool Execution Result:
-        ${JSON.stringify(executionResult, null, 2)}
+<execution_result>
+${executionResult}
+</execution_result>
 
-        ### Instructions:
-        1. If the tool **failed** or **needs more details**, generate a clarification request for the user.
-        2. If execution **was successful**, confirm it to the user.
-        3. If execution **is uncertain**, ask the user how to proceed.
+<user_message>
+{{USERMESSAGE}}
+</user_message>
 
-        ### Response Format (JSON):
-        {
-        "next_action": "retry_tool" | "ask_user" | "confirm_success",
-        "new_parameters": { ... } (if retrying),
-        "response": "..."
-        }
-        `;
+Instructions:
+1. Adapt to the user's language (German, English, Swiss German, etc.) and maintain a casual, friendly tone throughout your thought process.
+2. Keep your final response short (1-2 lines) and informal, as if chatting with a colleague.
+3. Use incomplete sentences and common everyday expressions where appropriate.
+4. Avoid perfect grammar and long explanations in your final response.
+5. Match the user's tone and style in your response.
+
+Process:
+1. Analyze the user's message, conversation history, selected tool, tool parameters, and execution result.
+2. Determine the status of the tool execution: failed, successful, or uncertain.
+3. Based on the status, decide on the next action:
+   - If failed or needs more details: generate a clarification request
+   - If successful: confirm the success to the user
+   - If uncertain: ask the user how to proceed
+4. Formulate your response according to the determined action.
+5. Structure your response in the required JSON format.
+
+Show your thought process inside <analysis> tags:
+1. Quote relevant parts of the conversation history and execution result.
+2. Analyze the tool execution status and explain your reasoning.
+3. Explicitly state the chosen action and explain why.
+4. Draft a brief response (aim for 10-20 words) in the user's language and style.
+
+Output Format:
+Your final output must be a JSON object with the following structure:
+
+{
+  "next_action": "retry_tool" | "ask_user" | "confirm_success",
+  "new_parameters": { ... } (include only if next_action is "retry_tool"),
+  "response": "..." (your 1-2 line response in the user's language and style)
+}
+
+Remember, the output should contain ONLY the JSON object, with no additional text before or after.`
+
 
         const msg = await anthropic.messages.create({
             model: "claude-3-7-sonnet-20250219",
-            max_tokens: 1000,
-            temperature: 0.8,
-            system: "Please adapt to the user's language (German, English, Swiss German, etc.) and write in a natural, casual chatting style. Keep responses short (1-2 lines). Write informally like a colleague, using incomplete sentences and common everyday expressions. Avoid perfect grammar and long explanations. Respond in the user's tone and style.",
+            max_tokens: 5000,
+            temperature: 1,
             messages: [
                 {
                     role: "user",
-                    content: [{ type: "text", text: prompt }]
+                    content: [{
+                        type: "text",
+                        text: prompt }]
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "The Output JSON is: {"
+                        }
+                        ]
                 }
             ]
         });
@@ -182,8 +224,8 @@ export async function callLLMToolFeedback(userMessage: string, history: any[], s
             .filter(block => block.type === "text")
             .map(block => block.text)
             .join(" ");
-
-        return JSON.parse(responseText);
+        console.log("model response: ",responseText)
+        return JSON.parse("{" + responseText);
     } catch (error) {
         console.error("Error in callLLMToolFeedback:", error);
         return { next_action: "ask_user", new_parameters: {}, response: "Ich kann mir grad nichts merken" };
