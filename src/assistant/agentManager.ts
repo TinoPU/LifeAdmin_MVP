@@ -34,7 +34,7 @@ export class AgentManager {
                     actor: "agent",
                     message: response,
                     user_id: user_id,
-                    parent_message_id: messageObject.id,
+                    parent_message_id: parent_message_id,
                     message_sent_at: timeNow
                 }
                 await storeMessage(db_messageObject);
