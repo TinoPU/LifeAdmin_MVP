@@ -44,6 +44,8 @@ export class AgentManager {
             const executionResult = await executeTool(tool, parameters, user_id);
             console.log("Task executed with result: ", executionResult)
 
+            //Hot fix -> skip 2nd call on tool success #TODO: implement test and trial
+
             const tool_description = getToolByName(tool) || tool
 
             // Step 4: Pass execution result to LLM for confirmation

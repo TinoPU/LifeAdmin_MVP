@@ -143,24 +143,20 @@ ${userMessage}
 </latest_message>
 
 <conversation_history>
-${history}
+${JSON.stringify(history, null, 2)}
 </conversation_history>
 
 <selected_tool>
-${selectedTool}
+${JSON.stringify(selectedTool, null, 2)}
 </selected_tool>
 
 <tool_parameters>
-${parameters}
+${JSON.stringify(parameters, null, 2)}
 </tool_parameters>
 
 <execution_result>
-${executionResult}
+${JSON.stringify(executionResult, null, 2)}
 </execution_result>
-
-<user_message>
-{{USERMESSAGE}}
-</user_message>
 
 Instructions:
 1. Adapt to the user's language (German, English, Swiss German, etc.) and maintain a casual, friendly tone throughout your thought process.
