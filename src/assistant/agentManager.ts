@@ -8,7 +8,7 @@ import {cacheWhatsappMessage} from "../utils/redisActions";
 import {Message} from "../types/message";
 
 export class AgentManager {
-    async handleNewRequest(user_id: string, messageObject: WAIncomingMessage) {
+    async handleNewRequest(user_id: string, parent_message_id: string, messageObject: WAIncomingMessage) {
         try {
             const message = messageObject.text?.body
             if (typeof message !== "string") {
