@@ -103,6 +103,7 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: 
         }
 
         console.log(`✅ Successfully stored WA message ${message_id}`);
+        return message_id
     } catch (error) {
         console.error("❌ Error storing WhatsApp message:", error);
         throw error;
