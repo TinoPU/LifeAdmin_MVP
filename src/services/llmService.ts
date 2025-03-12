@@ -25,11 +25,10 @@ export async function generateUserMessageResponse(userMessage: string) {
                 }
             ]
         });
-        const responseText = msg.content
+        return msg.content
             .filter((block: any) => block.type === "text") // Ensure it's a text block
             .map((block: any) => block.text) // Extract text
             .join(" "); // Join all text blocks into one string
-        return responseText;
     } catch (error) {
         console.log(error)
         return
