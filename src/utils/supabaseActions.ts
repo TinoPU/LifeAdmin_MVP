@@ -159,3 +159,19 @@ export async function createReminder (reminder: Reminder) {
         id: data.id
     };
 }
+
+export async function storeMessage(message:Message) {
+    const {data, error} = await supabase.from("messages").insert([message]).select("id").single();
+    if (error) {
+        console.log(error)
+        return {
+            success: false,
+            message: `Error: Message store failed with error: ${error}`,
+        };
+    }
+    return {
+        success: true,
+        message: `Message stored Successfully: ${data}`,
+        id: data.id
+    };
+}

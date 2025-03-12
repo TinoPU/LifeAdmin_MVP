@@ -1,9 +1,8 @@
 import {WAIncomingObject} from "../types/incomingWAObject/WAIncomingObject";
 import {fetchUserId} from "../utils/userUtils";
 import {cacheWhatsappMessage} from "../utils/redisActions";
-import ConversationService from "./conversationService";
 import {storeWhatsAppMessage} from "../utils/supabaseActions";
-import sendMessage from "./messageService";
+import {AgentManager} from "../assistant/agentManager";
 
 export const handleIncomingWebhook = async (payload: WAIncomingObject) => {
     const messageObject = payload.entry[0].changes[0].value.messages[0]
@@ -11,8 +10,8 @@ export const handleIncomingWebhook = async (payload: WAIncomingObject) => {
 
     if (messageObject.text) {
         // await cacheWhatsappMessage(user_id, "user", messageObject.text?.body, messageObject.timestamp)
-        const response_message = await ConversationService.generateResponse(user_id) || "Sorry ich kann grad nicht. 🤒"
-        await sendMessage(messageObject.from, response_message)
+        const agentManager = new AgentManager();
+        const response_message = await agentManager.handleNewRequest(user_id, messageObject)
         const timeNow = new Date().toISOString();
         await cacheWhatsappMessage(user_id, "agent", response_message, timeNow)
         await storeWhatsAppMessage(messageObject, user_id, "user", response_message, timeNow)

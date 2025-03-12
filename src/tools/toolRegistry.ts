@@ -19,6 +19,11 @@ export interface ToolSchema {
         required: string[]
     };
 }
+export interface ToolResult {
+    success: boolean;
+    message: string;
+    updated_parameters?: any
+}
 
 export const toolRegistry: Record<string, {
     function: ToolFunction;
@@ -105,4 +110,9 @@ export function getToolRegistry() {
  */
 export function getToolSchema(): ToolSchema[] {
     return Object.values(toolRegistry).map(tool => tool.schema);
+}
+
+export function getToolByName(toolName: string): ToolSchema | null {
+    const tool = toolRegistry[toolName];
+    return tool.schema;
 }

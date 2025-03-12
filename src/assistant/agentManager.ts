@@ -1,11 +1,11 @@
 import conversationService from "../services/conversationService";
 import { callLLMOrchestration, callLLMToolFeedback } from "../services/llmService";
-import {executeTool, getToolRegistry, getToolSchema, toolRegistry} from "../tools/toolRegistry";
-import { storeMessage, storeExecutionLog } from "../database/supabaseActions";
+import {executeTool, getToolByName, getToolSchema} from "../tools/toolRegistry";
+import { storeMessage } from "../utils/supabaseActions";
 import { sendMessage } from "../services/messageService";
-import { cacheMessage, getCachedMessages } from "../lutils/redisActions";
 import {WAIncomingMessage} from "../types/incomingWAObject/WAIncomingMessage";
 import {cacheWhatsappMessage} from "../utils/redisActions";
+import {Message} from "../types/message";
 
 export class AgentManager {
     async handleNewRequest(user_id: string, messageObject: WAIncomingMessage) {
@@ -22,57 +22,86 @@ export class AgentManager {
 
             const toolSchema = getToolSchema();
             const llmResponse = await callLLMOrchestration(message, history, toolSchema);
-
             const { tool, parameters, response } = llmResponse;
 
 
             // Step 2: LLM Response check
             if (tool === "none") {
                 // No tool needed, just respond to user
-                await sendMessage(userId, response);
-                await storeMessage(userId, message, response);
+                await sendMessage(user_id, response);
+                const timeNow = new Date().toISOString();
+                const db_messageObject: Message = {
+                    actor: "agent",
+                    message: response,
+                    user_id: user_id,
+                    parent_message_id: messageObject.id,
+                    message_sent_at: timeNow
+                }
+                await storeMessage(db_messageObject);
                 return;
             }
-
             // Step 3: Execute the tool
             const executionResult = await executeTool(tool, parameters, user_id);
 
-            // Step 4: Pass execution result to LLM for confirmation
-            const toolFeedback = await callLLMToolFeedback(message, history, tool, parameters, executionResult);
+            const tool_description = getToolByName(tool) || tool
 
-            const { next_action, response: finalResponse } = toolFeedback;
+            // Step 4: Pass execution result to LLM for confirmation
+            const toolFeedback = await callLLMToolFeedback(message, history, tool_description, parameters, executionResult);
+            let {next_action: next_action, response: finalResponse, new_parameters = {}} = toolFeedback;
 
             // Step 5: Handle tool feedback
             if (next_action === "retry_tool") {
-                return this.retryToolExecution(userId, tool, toolFeedback.parameters);
-            } else {
-                // Send final response to user (either success confirmation or clarification)
-                await sendMessage(userId, finalResponse);
-                await storeExecutionLog(userId, tool, executionResult, finalResponse);
+                let retry_count = 0
+                while (retry_count < 3) {
+                    if (retry_count == 1) {
+                        sendMessage(user_id, "wart kurz...").catch(() => {})
+                        const timeNow = new Date().toISOString();
+                        const db_messageObject: Message = {
+                            actor: "agent",
+                            message: "wart kurz...",
+                            user_id: user_id,
+                            parent_message_id: messageObject.id,
+                            message_sent_at: timeNow
+                        }
+                        storeMessage(db_messageObject).catch(() => {})
+                    }
+                    const execution_retry_result = await executeTool(tool, new_parameters,  user_id)
+                    // Get new tool feedback to determine if another retry is needed
+                    const toolFeedbackRetry = await callLLMToolFeedback(
+                        message,
+                        history,
+                        tool_description,
+                        new_parameters,
+                        execution_retry_result
+                    );
+                    const { next_action: updated_next_action, new_parameters: updated_parameters, response: updated_response} = toolFeedbackRetry;
+                    // If next action is no longer retrying, break the loop
+                    if (updated_next_action !== "retry_tool") {
+                        finalResponse = updated_response
+                        break;
+                    }
+                    new_parameters = updated_parameters || {};
+                    retry_count += 1
+                }
             }
 
-            // Step 6: Cache messages and sync to DB later
-            await cacheMessage(userId, message, finalResponse);
+            // Send final response to user (either success confirmation or clarification)
+            await sendMessage(user_id, finalResponse);
+            //await storeExecutionLog(userId, tool, executionResult, finalResponse);
+            const timeNow = new Date().toISOString();
+            const db_messageObject: Message = {
+                actor: "agent",
+                message: finalResponse,
+                user_id: user_id,
+                parent_message_id: messageObject.id,
+                message_sent_at: timeNow
+            }
+            await storeMessage(db_messageObject)
+            return finalResponse
         } catch (error) {
             console.error("Error in AgentManager:", error);
-            await sendMessage(userId, "Sorry, something went wrong while processing your request.");
-        }
-    }
-
-    async retryToolExecution(userId: string, tool: string, parameters: any) {
-        try {
-            // Retry tool execution with updated parameters
-            const retryResult = await executeTool(tool, parameters);
-
-            // Notify user if retry was successful
-            await sendMessage(userId, `I've retried executing the tool and here is the result: ${retryResult.message}`);
-
-            // Store retry logs
-            await storeExecutionLog(userId, tool, retryResult, "Retried execution");
-
-        } catch (error) {
-            console.error("Error retrying tool execution:", error);
-            await sendMessage(userId, "I attempted to retry, but something went wrong.");
+            await sendMessage(user_id, "Ne da bin ich raus");
+            return "Ne da bin ich raus"
         }
     }
 }
