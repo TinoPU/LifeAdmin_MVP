@@ -148,10 +148,10 @@ export async function createTask(task: Task) {
 export async function createReminder (reminder: Reminder) {
     const {data, error} = await supabase.from("reminders").insert(reminder).select("id").single()
     if (error) {
-        console.log(error)
+        console.log(error.message)
         return {
             success: false,
-            message: `Error: Reminder creation failed with error: ${error}`,
+            message: `Error: Reminder creation failed with error: ${error.message}`,
         };
     }
     return {

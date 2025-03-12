@@ -42,6 +42,7 @@ export class AgentManager {
             }
             // Step 3: Execute the tool
             const executionResult = await executeTool(tool, parameters, user_id);
+            console.log("Task executed with result: ", executionResult)
 
             const tool_description = getToolByName(tool) || tool
 
@@ -60,7 +61,7 @@ export class AgentManager {
                             actor: "agent",
                             message: "wart kurz...",
                             user_id: user_id,
-                            parent_message_id: messageObject.id,
+                            parent_message_id: parent_message_id,
                             message_sent_at: timeNow
                         }
                         storeMessage(db_messageObject).catch(() => {})
@@ -93,7 +94,7 @@ export class AgentManager {
                 actor: "agent",
                 message: finalResponse,
                 user_id: user_id,
-                parent_message_id: messageObject.id,
+                parent_message_id: parent_message_id,
                 message_sent_at: timeNow
             }
             await storeMessage(db_messageObject)
