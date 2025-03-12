@@ -221,7 +221,6 @@ Remember, the output should contain ONLY the JSON object, with no additional tex
             .map(block => block.text)
             .join(" ");
         console.log("model response: ",responseText)
-        console.log("model input:", prompt)
         return JSON.parse("{" + responseText);
     } catch (error) {
         console.error("Error in callLLMToolFeedback:", error);
