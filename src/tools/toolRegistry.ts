@@ -1,6 +1,6 @@
 import {createTaskTool} from "./taskTools";
 
-export type ToolFunction = (parameters: any) => Promise<{
+export type ToolFunction = (properties: any, user_id: string) => Promise<{
     success: boolean;
     message: string;
     updated_parameters?: any
@@ -38,7 +38,7 @@ export const toolRegistry: Record<string, {
                     },
                     "due_date": {
                         type: "string",
-                        description: "The due date of the task (ISO 8601 format)."
+                        description: "The due date of the task (ISO 8601 format) it must contain a time (this can be an estimate if no explicit time is provided)."
                     },
                     "task_description": {
                         type: "string",
@@ -83,14 +83,14 @@ export const toolRegistry: Record<string, {
 /**
  * Executes a tool dynamically based on its name.
  */
-export async function executeTool(toolName: string, parameters: any) {
+export async function executeTool(toolName: string, properties: any, user_id:string) {
     const tool = toolRegistry[toolName];
 
     if (!tool) {
         return { success: false, message: `Tool '${toolName}' not found.` };
     }
 
-    return await tool.function(parameters);
+    return await tool.function(properties, user_id);
 }
 
 /**

@@ -1,6 +1,6 @@
 import conversationService from "../services/conversationService";
 import { callLLMOrchestration, callLLMToolFeedback } from "../services/llmService";
-import { executeTool, getToolRegistry } from "../tools/toolRegistry";
+import {executeTool, getToolRegistry, getToolSchema, toolRegistry} from "../tools/toolRegistry";
 import { storeMessage, storeExecutionLog } from "../database/supabaseActions";
 import { sendMessage } from "../services/messageService";
 import { cacheMessage, getCachedMessages } from "../lutils/redisActions";
@@ -20,11 +20,12 @@ export class AgentManager {
             const history = await conversationService.getRecentMessages(user_id);
             cacheWhatsappMessage(user_id, "user", message, messageObject.timestamp).catch(error => console.error("Error caching WhatsApp message:", error));
 
-            const toolRegistry = getToolRegistry(); // Get available tools
-            const llmResponse = await callLLMOrchestration(message, history, toolRegistry);
+            const toolSchema = getToolSchema();
+            const llmResponse = await callLLMOrchestration(message, history, toolSchema);
+
             const { tool, parameters, response } = llmResponse;
 
-            
+
             // Step 2: LLM Response check
             if (tool === "none") {
                 // No tool needed, just respond to user
@@ -34,7 +35,7 @@ export class AgentManager {
             }
 
             // Step 3: Execute the tool
-            const executionResult = await executeTool(tool, parameters);
+            const executionResult = await executeTool(tool, parameters, user_id);
 
             // Step 4: Pass execution result to LLM for confirmation
             const toolFeedback = await callLLMToolFeedback(message, history, tool, parameters, executionResult);

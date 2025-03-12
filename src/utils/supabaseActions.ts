@@ -2,6 +2,7 @@ import { WAIncomingMessage } from "../types/incomingWAObject/WAIncomingMessage";
 import supabase from "../database/supabaseClient";
 import {Contact} from "../types/incomingWAObject/WAIncomingValueObject";
 import {Message, wa_metadata} from "../types/message";
+import {Reminder, Task} from "../types/db";
 
 export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: string, actor:string, response?: string, response_sent_at?: string, parent_message_id?: string) {
     try {
@@ -122,4 +123,39 @@ export async function createNewUser(contact: Contact) {
     }
 
     return data.id
+}
+
+export async function createTask(task: Task) {
+
+    const {data, error} = await supabase.from("tasks").insert(task).select("id").single()
+
+    if (error) {
+        console.log(error)
+        return {
+            success: false,
+            message: `Error: task creation failed with error: ${error}`,
+        };
+    }
+    return {
+        success: true,
+        message: `Task created Successfully: ${data}`,
+        id: data.id
+    };
+
+}
+
+export async function createReminder (reminder: Reminder) {
+    const {data, error} = await supabase.from("reminders").insert(reminder).select("id").single()
+    if (error) {
+        console.log(error)
+        return {
+            success: false,
+            message: `Error: Reminder creation failed with error: ${error}`,
+        };
+    }
+    return {
+        success: true,
+        message: `Reminder created Successfully: ${data}`,
+        id: data.id
+    };
 }

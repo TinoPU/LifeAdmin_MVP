@@ -1,16 +1,17 @@
+import {createReminder, createTask} from "../utils/supabaseActions";
 
 
 export async function createTaskTool(
-    parameters: {
+    properties: {
         name: string,
         due_date: string,
         description ? : string,
         reminder_info ? : string
-    }) {
+    }, user_id: string) {
     const missingFields = [];
 
-    if (!parameters.name) missingFields.push("name");
-    if (!parameters.due_date) missingFields.push("due_date");
+    if (!properties.name) missingFields.push("name");
+    if (!properties.due_date) missingFields.push("due_date");
 
     if (missingFields.length > 0) {
         return Promise.resolve({
@@ -19,15 +20,58 @@ export async function createTaskTool(
         });
     }
 
+    // Create Task
+    const taskResponse = await createTask({
+        name: properties.name,
+        due_date: properties.due_date,
+        task_description: properties.description || "",
+        source: "whatsapp",
+        user_id: user_id
+    })
 
+    if (!taskResponse.success) {
+        return Promise.resolve({
+            success: false,
+            message: taskResponse.message
+        })
+    }
 
+    let reminders = []
+    // Add reminders #TODO: add dynamic reminder schedule at some point
+    const reminder_3h = new Date(new Date(properties.due_date).getTime() - 3 * 60 * 60 * 1000).toISOString();
+    const reminder_1d = new Date(new Date(properties.due_date).getTime() - 24 * 60 * 60 * 1000).toISOString();
 
+    reminders.push([reminder_1d, reminder_3h]);
 
+    let reminderResponses = [];
 
+    for (const reminder of reminders[0]) {
+        const reminderResponse = createReminder({
+            reminder_time: reminder,
+            task_id: taskResponse.id,
+            user_id: user_id
+        });
+        reminderResponses.push(reminderResponse);
+    }
 
-
-
-    return Promise.resolve({
-        success: true,
-        message: "done"})
+    Promise.all(reminderResponses).then(async (responses) => {
+        // Check the success of each reminder response
+        for (const response of responses) {
+            if (!response.success) {
+                // Throw an error if any reminder creation fails
+                throw new Error(`Failed to create reminder: ${response.message}`);
+            }
+        }
+        console.log("All reminders created:", responses);
+        return Promise.resolve({
+            success: true,
+            message: "Task and Reminders created successfully"
+        })
+    }).catch((error) => {
+        console.error("Error creating reminders:", error.message);
+        return {
+            success: false,
+            message: `Task created successfully, but at least one reminder failed: ${error.message}`
+        };
+    });
 }
