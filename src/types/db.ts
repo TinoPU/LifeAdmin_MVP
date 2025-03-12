@@ -12,13 +12,13 @@ export interface User {
 }
 
 export interface Task {
-    id: UUID;
+    id?: UUID;
     created_at?: string;
     user_id: UUID;
     task_description?: string;
     name: string;
-    due_time: string; // Store as ISO 8601 string
-    status: "pending" | "completed" | "canceled";
+    due_date: string; // Store as ISO 8601 string
+    status?: "pending" | "completed" | "canceled";
     source: "whatsapp" | "email" | "calendar";
     source_id?: UUID;
     type?: string;
@@ -30,11 +30,11 @@ export interface Task {
 }
 
 export interface Reminder {
-    id: UUID;
+    id?: UUID;
     created_at?: string;
     task_id: UUID;
     user_id?: UUID;
     reminder_time: string;
-    status: "scheduled" | "sent" | "cancelled";
+    status?: "scheduled" | "sent" | "cancelled";
     updated_at?: string
 }
