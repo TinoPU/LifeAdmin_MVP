@@ -10,7 +10,7 @@ export const handleIncomingWebhook = async (payload: WAIncomingObject) => {
     const user_id = await fetchUserId(payload.entry[0].changes[0].value.contacts[0])
 
     if (messageObject.text) {
-        await cacheWhatsappMessage(user_id, "user", messageObject.text?.body, messageObject.timestamp)
+        // await cacheWhatsappMessage(user_id, "user", messageObject.text?.body, messageObject.timestamp)
         const response_message = await ConversationService.generateResponse(user_id) || "Sorry ich kann grad nicht. 🤒"
         await sendMessage(messageObject.from, response_message)
         const timeNow = new Date().toISOString();

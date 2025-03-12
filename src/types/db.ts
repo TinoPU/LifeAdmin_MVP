@@ -17,7 +17,7 @@ export interface Task {
     user_id: UUID;
     task_description?: string;
     name: string;
-    due_time: string; // Store as ISO 8601 string
+    due_date: string; // Store as ISO 8601 string
     status: "pending" | "completed" | "canceled";
     source: "whatsapp" | "email" | "calendar";
     source_id?: UUID;
