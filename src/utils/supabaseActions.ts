@@ -156,7 +156,7 @@ export async function createReminder (reminder: Reminder) {
     }
     return {
         success: true,
-        message: `Reminder created Successfully: ${data}`,
+        message: `Reminder created Successfully: ${data.id}`,
         id: data.id
     };
 }
@@ -172,7 +172,7 @@ export async function storeMessage(message:Message) {
     }
     return {
         success: true,
-        message: `Message stored Successfully: ${data}`,
+        message: `Message stored Successfully: ${data.id}`,
         id: data.id
     };
 }
