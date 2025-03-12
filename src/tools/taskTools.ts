@@ -1,4 +1,5 @@
 import {createReminder, createTask} from "../utils/supabaseActions";
+import {response} from "express";
 
 
 export async function createTaskTool(
@@ -29,6 +30,12 @@ export async function createTaskTool(
         user_id: user_id
     })
 
+    if (!taskResponse) {
+        return Promise.resolve({
+            success: false,
+            message: "Error: could not execute task, task response is null or undefined."
+        })
+    }
     if (!taskResponse.success) {
         return Promise.resolve({
             success: false,
@@ -54,9 +61,15 @@ export async function createTaskTool(
         reminderResponses.push(reminderResponse);
     }
 
-    Promise.all(reminderResponses).then(async (responses) => {
+    return Promise.all(reminderResponses).then(async (responses) => {
+        if (responses.length <= 1) {
+            throw new Error(`Failed to create reminders, supabase responses: ${responses}`)
+        }
         // Check the success of each reminder response
         for (const response of responses) {
+            if (!response) {
+                throw new Error(`Failed to create reminder, supabase response: ${response}`)
+            }
             if (!response.success) {
                 // Throw an error if any reminder creation fails
                 throw new Error(`Failed to create reminder: ${response.message}`);
