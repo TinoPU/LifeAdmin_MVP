@@ -14,6 +14,9 @@ redisClient.on('error', (err) => console.error('Redis Client Error', err));
     try {
         await redisClient.connect();
         console.log('🔗 Connected to Redis');
+        // await redisClient.flushAll()
+        // console.log("db flushed")
+
     } catch (err) {
         console.error('❌ Redis connection error:', err);
     }

@@ -14,13 +14,14 @@ export async function fetchUserId(contact: Contact) {
     const cachedUserId = await redisClient.get(redisKey);
     if (cachedUserId) {
         console.log("Cache hit! Found user ID in Redis.");
+        console.log(cachedUserId)
         return JSON.parse(cachedUserId) as User; // Return cached value immediately
     }
 
     // 2. Query database if cache is empty
     const { data, error } = await supabase
         .from("users")
-        .select("id")
+        .select("*")
         .eq("wa_id", wa_user_id)
         .single();
 
