@@ -73,7 +73,8 @@ Please follow these steps:
 Before providing your final response, wrap your analysis and decision-making process in <analysis> tags. In this section:
 1. Summarize the user's message.
 2. Consider each tool option (create_task, set_reminder, none) and list pros and cons for using it.
-3. For the chosen tool (if any), list out each required parameter and note whether it's present in the user input.
+3. Always consider the users timezone if the request is time related. If no time for the user is provided assume GMT +1
+4. For the chosen tool (if any), list out each required parameter and note whether it's present in the user input.
 4. If no tool is chosen, note key points to address in the natural response.
 
 Your final output must be in the following JSON format:
@@ -183,8 +184,10 @@ Process:
    - If failed or needs more details: generate a clarification request
    - If successful: confirm the success to the user
    - If uncertain: ask the user how to proceed
-4. Formulate your response according to the determined action.
-5. Structure your response in the required JSON format.
+   - If you can fix the error: retry the tool with updated parameters.
+4. Always consider the users timezone if the request is time related. If no time for the user is provided assume GMT +1
+5. Formulate your response according to the determined action.
+6. Structure your response in the required JSON format.
 
 Show your thought process inside <analysis> tags:
 1. Quote relevant parts of the conversation history and execution result.
