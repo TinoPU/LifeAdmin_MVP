@@ -29,7 +29,7 @@ const supabaseClient = createClient(
 
 serve(async () => {
   // 1. Fetch reminders that are due
-  const { data: dueReminders, error } = await supabaseClient
+  const {data: dueReminders, error} = await supabaseClient
       .from('reminders')
       .select('*')
       .eq('status', 'scheduled')
@@ -37,7 +37,7 @@ serve(async () => {
 
   if (error) {
     console.error('Error fetching due reminders:', error)
-    return new Response('Error fetching reminders', { status: 500 })
+    return new Response('Error fetching reminders', {status: 500})
   }
 
   // 2. Notify your server and update each reminder
@@ -45,18 +45,56 @@ serve(async () => {
     // Notify your server
     await fetch('https://life-admin-mvp.vercel.app/api/webhooks/supabase', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(reminder),
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        notification: "due_notification",
+        payload_type: "reminder",
+        payload: reminder, // No need to stringify again
+      }),
     })
 
     // Update status so it won't be sent again
     await supabaseClient
         .from('reminders')
-        .update({ status: 'sent' })
+        .update({status: 'sent'})
         .eq('id', reminder.id)
   }
 
-  return new Response('OK', { status: 200 })
+  serve(async () => {
+    // 1. Fetch reminders that are due
+    const {data: dueTasks, error} = await supabaseClient
+        .from('tasks')
+        .select('*')
+        .eq('status', 'pending')
+        .lte('due_time', new Date().toISOString())
+
+    if (error) {
+      console.error('Error fetching due tasks:', error)
+      return new Response('Error fetching tasks', {status: 500})
+    }
+
+    // 2. Notify your server and update each reminder
+    for (const task of dueTasks || []) {
+      // Notify your server
+      await fetch('https://life-admin-mvp.vercel.app/api/webhooks/supabase', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          notification: "due_notification",
+          payload_type: "task",
+          payload: task, // No need to stringify again
+        }),
+      })
+
+      // Update status so it won't be sent again
+      await supabaseClient
+          .from('tasks')
+          .update({status: 'completed'})
+          .eq('id', task.id)
+    }
+
+    return new Response('OK', {status: 200})
+  })
 })
 
 

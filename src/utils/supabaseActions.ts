@@ -126,6 +126,21 @@ export async function createNewUser(contact: Contact) {
     return data.id
 }
 
+export async function getUser(user_id: string) {
+    const { data, error } = await supabase
+        .from("users")
+        .select("*") // Select all columns, modify as needed
+        .eq("id", user_id) // Filter by user_id
+        .single(); // Expect a single result
+
+    if (error) {
+        console.error("Error fetching user:", error);
+        return null; // Handle error appropriately
+    }
+
+    return data;
+}
+
 export async function createTask(task: Task) {
 
     const {data, error} = await supabase.from("tasks").insert(task).select("id").single()
@@ -143,6 +158,21 @@ export async function createTask(task: Task) {
         id: data.id
     };
 
+}
+
+export async function getTask(task_id: string) {
+    const { data, error } = await supabase
+        .from("tasks")
+        .select("*") // Select all columns, modify as needed
+        .eq("id", task_id) // Filter by user_id
+        .single(); // Expect a single result
+
+    if (error) {
+        console.error("Error fetching task:", error);
+        return null; // Handle error appropriately
+    }
+
+    return data;
 }
 
 export async function createReminder (reminder: Reminder) {
