@@ -24,7 +24,6 @@ export class AgentManager {
             const llmResponse = await callLLMOrchestration(message, history, toolSchema);
             const { tool, parameters, response } = llmResponse;
 
-
             // Step 2: LLM Response check
             if (tool === "none") {
                 // No tool needed, just respond to user
