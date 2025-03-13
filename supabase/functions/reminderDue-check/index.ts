@@ -44,7 +44,7 @@ serve(async () => {
     console.log("No Reminders due")
   }
 
-  // 2. Notify your server and update each reminder
+  // 2. Notify your server and update each tasks
   for (const reminder of dueReminders || []) {
     // Notify your server
     await fetch('https://life-admin-mvp.vercel.app/api/webhooks/supabase', {
@@ -64,8 +64,7 @@ serve(async () => {
         .eq('id', reminder.id)
   }
 
-  serve(async () => {
-    // 1. Fetch reminders that are due
+    // 1. Fetch tasks that are due
     const {data: dueTasks, error} = await supabaseClient
         .from('tasks')
         .select('*')
@@ -81,7 +80,7 @@ serve(async () => {
       console.log("No Tasks due")
     }
 
-    // 2. Notify your server and update each reminder
+    // 2. Notify your server and update each task
     for (const task of dueTasks || []) {
       // Notify your server
       await fetch('https://life-admin-mvp.vercel.app/api/webhooks/supabase', {
@@ -100,9 +99,7 @@ serve(async () => {
           .update({status: 'completed'})
           .eq('id', task.id)
     }
-
     return new Response('OK', {status: 200})
-  })
 })
 
 

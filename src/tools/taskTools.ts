@@ -44,11 +44,29 @@ export async function createTaskTool(
     }
 
     let reminders = []
-    // Add reminders #TODO: add dynamic reminder schedule at some point
-    const reminder_3h = new Date(new Date(properties.due_date).getTime() - 3 * 60 * 60 * 1000).toISOString();
-    const reminder_1d = new Date(new Date(properties.due_date).getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const now = Date.now();
+    const dueDate = new Date(properties.due_date).getTime();
 
-    reminders.push([reminder_1d, reminder_3h]);
+    // Add reminders #TODO: add dynamic reminder schedule at some point
+    const reminder_1_5h = new Date(dueDate - 1.5 * 60 * 60 * 1000).toISOString();
+    const reminder_1d = new Date(dueDate - 24 * 60 * 60 * 1000).toISOString();
+
+    // Determine which reminders to set
+    if (dueDate - now > 3 * 60 * 60 * 1000) { // More than 3 hours away
+        reminders.push(reminder_1_5h);
+    }
+    if (dueDate - now > 48 * 60 * 60 * 1000) { // More than 1 day away
+        reminders.push(reminder_1d);
+    }
+
+    reminders.push([reminder_1d, reminder_1_5h]);
+
+    if (reminders.length == 0) {
+        return Promise.resolve({
+            success: true,
+            message: "Task and Reminders created successfully"
+        })
+    }
 
     let reminderResponses = [];
 
