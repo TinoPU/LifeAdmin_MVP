@@ -58,8 +58,6 @@ export async function createTaskTool(
         reminders.push(reminder_1d);
     }
 
-    reminders.push([reminder_1d, reminder_1_5h]);
-
     if (reminders.length == 0) {
         return Promise.resolve({
             success: true,
