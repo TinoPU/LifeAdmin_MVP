@@ -40,6 +40,10 @@ serve(async () => {
     return new Response('Error fetching reminders', {status: 500})
   }
 
+  if (dueReminders.length < 1) {
+    console.log("No Reminders due")
+  }
+
   // 2. Notify your server and update each reminder
   for (const reminder of dueReminders || []) {
     // Notify your server
@@ -71,6 +75,10 @@ serve(async () => {
     if (error) {
       console.error('Error fetching due tasks:', error)
       return new Response('Error fetching tasks', {status: 500})
+    }
+
+    if (dueTasks.length < 1) {
+      console.log("No Tasks due")
     }
 
     // 2. Notify your server and update each reminder

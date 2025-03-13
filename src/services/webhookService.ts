@@ -26,6 +26,7 @@ export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
 
 export const handleIncomingSupabaseWebhook = async (data: SupabaseDueWebhook) => {
     try {
+        console.log("Webhook received data: ", data)
         if (!data.payload.user_id) {
             throw new Error("No user_id in payload");
         }
