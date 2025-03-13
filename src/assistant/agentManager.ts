@@ -6,10 +6,15 @@ import { sendMessage } from "../services/messageService";
 import {WAIncomingMessage} from "../types/incomingWAObject/WAIncomingMessage";
 import {cacheWhatsappMessage} from "../utils/redisActions";
 import {Message} from "../types/message";
+import {User} from "../types/db";
 
 export class AgentManager {
-    async handleNewRequest(user_id: string, parent_message_id: string, messageObject: WAIncomingMessage) {
+    async handleNewRequest(user: User, parent_message_id: string, messageObject: WAIncomingMessage) {
         try {
+            if (!user.id) {
+                return "No user provided"
+            }
+
             const message = messageObject.text?.body
             if (typeof message !== "string") {
                 console.error("Invalid message: Expected a string but received", message);
@@ -17,8 +22,8 @@ export class AgentManager {
             }
 
             // Step 1: Orchestration
-            const history = await conversationService.getRecentMessages(user_id);
-            cacheWhatsappMessage(user_id, "user", message, messageObject.timestamp).catch(error => console.error("Error caching WhatsApp message:", error));
+            const history = await conversationService.getRecentMessages(user.id);
+            cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => console.error("Error caching WhatsApp message:", error));
 
             const toolSchema = getToolSchema();
             const llmResponse = await callLLMOrchestration(message, history, toolSchema);
@@ -32,7 +37,7 @@ export class AgentManager {
                 const db_messageObject: Message = {
                     actor: "agent",
                     message: response,
-                    user_id: user_id,
+                    user_id: user.id,
                     parent_message_id: parent_message_id,
                     message_sent_at: timeNow
                 }
@@ -40,7 +45,7 @@ export class AgentManager {
                 return;
             }
             // Step 3: Execute the tool
-            const executionResult = await executeTool(tool, parameters, user_id);
+            const executionResult = await executeTool(tool, parameters, user.id);
             console.log("Task executed with result: ", executionResult)
 
             //Hot fix -> skip 2nd call on tool success #TODO: implement test and trial
@@ -61,13 +66,13 @@ export class AgentManager {
                         const db_messageObject: Message = {
                             actor: "agent",
                             message: "wart kurz...",
-                            user_id: user_id,
+                            user_id: user.id,
                             parent_message_id: parent_message_id,
                             message_sent_at: timeNow
                         }
                         storeMessage(db_messageObject).catch(() => {})
                     }
-                    const execution_retry_result = await executeTool(tool, new_parameters,  user_id)
+                    const execution_retry_result = await executeTool(tool, new_parameters,  user.id)
                     // Get new tool feedback to determine if another retry is needed
                     const toolFeedbackRetry = await callLLMToolFeedback(
                         message,
@@ -94,7 +99,7 @@ export class AgentManager {
             const db_messageObject: Message = {
                 actor: "agent",
                 message: finalResponse,
-                user_id: user_id,
+                user_id: user.id,
                 parent_message_id: parent_message_id,
                 message_sent_at: timeNow
             }

@@ -2,17 +2,17 @@ import { WAIncomingMessage } from "../types/incomingWAObject/WAIncomingMessage";
 import supabase from "../database/supabaseClient";
 import {Contact} from "../types/incomingWAObject/WAIncomingValueObject";
 import {Message, wa_metadata} from "../types/message";
-import {Reminder, Task} from "../types/db";
+import {Reminder, Task, User} from "../types/db";
 import {getTzFromPhone} from "./transformationUtils";
 
-export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: string, actor:string, response?: string, response_sent_at?: string, parent_message_id?: string) {
+export async function storeWhatsAppMessage(message: WAIncomingMessage, user: User, actor:string, response?: string, response_sent_at?: string, parent_message_id?: string) {
     try {
         const messageSentAt = new Date(parseInt(message.timestamp, 10) * 1000).toISOString();
 
 
         // 🌟 Construct base message object for storage
         const messageData:Message = {
-            user_id: user_id,
+            user_id: user.id || "",
             message: message.text?.body || "",
             message_sent_at: messageSentAt,
             response: response,

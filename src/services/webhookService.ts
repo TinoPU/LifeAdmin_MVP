@@ -9,16 +9,16 @@ import sendMessage from "./messageService";
 
 export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
     const messageObject = payload.entry[0].changes[0].value.messages[0]
-    const user_id = await fetchUserId(payload.entry[0].changes[0].value.contacts[0])
-    console.log("user id is: ", user_id)
+    const user: User = await fetchUserId(payload.entry[0].changes[0].value.contacts[0])
+    console.log("user is: ", user)
 
     if (messageObject.text) {
         // await cacheWhatsappMessage(user_id, "user", messageObject.text?.body, messageObject.timestamp)
-        const parent_message_id = await storeWhatsAppMessage(messageObject, user_id, "user")
+        const parent_message_id = await storeWhatsAppMessage(messageObject, user, "user")
         const agentManager = new AgentManager();
-        const response_message = await agentManager.handleNewRequest(user_id, parent_message_id, messageObject)
+        const response_message = await agentManager.handleNewRequest(user, parent_message_id, messageObject)
         const timeNow = new Date().toISOString();
-        await cacheWhatsappMessage(user_id, "agent", response_message, timeNow)
+        await cacheWhatsappMessage(user, "agent", response_message, timeNow)
     }
 }
 

@@ -2,6 +2,8 @@ import {Contact} from "../types/incomingWAObject/WAIncomingValueObject";
 import redisClient from "../database/redis";
 import supabase from "../database/supabaseClient";
 import {createNewUser} from "./supabaseActions";
+import {User} from "../types/db";
+import {UserContext} from "../types/agent";
 
 
 export async function fetchUserId(contact: Contact) {
@@ -12,7 +14,7 @@ export async function fetchUserId(contact: Contact) {
     const cachedUserId = await redisClient.get(redisKey);
     if (cachedUserId) {
         console.log("Cache hit! Found user ID in Redis.");
-        return cachedUserId; // Return cached value immediately
+        return JSON.parse(cachedUserId) as User; // Return cached value immediately
     }
 
     // 2. Query database if cache is empty
@@ -30,6 +32,21 @@ export async function fetchUserId(contact: Contact) {
         return newUser;
     }
     // 4. Store user_id in Redis for future requests
-    await redisClient.set(redisKey, data.id, {EX: 86400}); // Expires in 24 hours
-    return data.id;
+    await redisClient.set(redisKey, JSON.stringify(data), {EX: 86400}); // Expires in 24 hours
+    return data;
+}
+
+
+export function constructUserContext (user: User) {
+
+    const timeNow = new Date()
+    const userTime: string = new Date(timeNow.getTime() + (user.user_timezone ?? 0) * 60 * 60 * 1000).toISOString();
+
+    const userContext: UserContext = {
+        name: user.name,
+        time_at_user_location: userTime,
+        language: user.language
+    }
+
+    return userContext
 }

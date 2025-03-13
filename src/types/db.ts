@@ -10,7 +10,7 @@ export interface User {
     preferences?: Record<string, any>; // Optional JSON field
     updated_at?: string;
     user_timezone?: number
-
+    language?: string
 }
 
 export interface Task {
