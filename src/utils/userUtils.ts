@@ -26,6 +26,7 @@ export async function fetchUserId(contact: Contact) {
         console.log("User not found in DB. Creating new user...");
         // 3. Create user if they don't exist
         const newUser = await createNewUser(contact);
+        console.log("New User created: ", newUser)
         return newUser.id;
     }
     // 4. Store user_id in Redis for future requests
