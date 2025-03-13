@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import {handleIncomingSupabaseWebhook, handleIncomingWAWebhook} from "../services/webhookService";
+import {WAIncomingObject} from "../types/incomingWAObject/WAIncomingObject";
 
 const router = express.Router();
 
@@ -7,12 +8,14 @@ const router = express.Router();
 // WHATSAPP ROUTES
 router.post("/", async (req: Request, res: Response) => {
     try {
-        const body = req.body;
+        const body: WAIncomingObject = req.body;
         await handleIncomingWAWebhook(body)
         res.status(200).send({ status: "Message processed." });
     }
     catch (err) {
-        console.log("Couldn't process Data: ",req.body)
+        const body: WAIncomingObject = req.body
+        console.log("Couldn't process Data: ",body.entry[0].changes)
+        console.log("Couldn't process Data: ",body.entry[0].changes[0].value)
         res.status(200).send({ status: "Data received." });
     }
 });
