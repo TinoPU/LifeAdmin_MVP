@@ -1,4 +1,5 @@
 import {createReminder, createTask} from "../utils/supabaseActions";
+import {User} from "../types/db";
 
 
 export async function createTaskTool(
@@ -7,7 +8,7 @@ export async function createTaskTool(
         due_date: string,
         description ? : string,
         reminder_info ? : string
-    }, user_id: string) {
+    }, user: User) {
     const missingFields = [];
 
     if (!properties.name) missingFields.push("name");
@@ -20,13 +21,21 @@ export async function createTaskTool(
         });
     }
 
+    if (!user.id) {
+        return Promise.resolve({
+            success: false,
+            message: `Error: Missing user, task cannot be performed right now.`
+        });
+    }
+
+
     // Create Task
     const taskResponse = await createTask({
         name: properties.name,
         due_date: properties.due_date,
         task_description: properties.description || "",
         source: "whatsapp",
-        user_id: user_id
+        user_id: user.id
     })
 
     if (!taskResponse) {
@@ -44,7 +53,7 @@ export async function createTaskTool(
 
     let reminders = []
     const now = Date.now();
-    const dueDate = new Date(properties.due_date).getTime();
+    const dueDate = new Date(properties.due_date).getTime() + (user.user_timezone ?? 1) * 60 * 60 * 1000;
 
     // Add reminders #TODO: add dynamic reminder schedule at some point
     const reminder_1_5h = new Date(dueDate - 1.5 * 60 * 60 * 1000).toISOString();
@@ -71,7 +80,8 @@ export async function createTaskTool(
         const reminderResponse = createReminder({
             reminder_time: reminder,
             task_id: taskResponse.id,
-            user_id: user_id
+            user_id: user.id
+
         });
         reminderResponses.push(reminderResponse);
     }

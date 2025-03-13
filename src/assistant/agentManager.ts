@@ -49,7 +49,7 @@ export class AgentManager {
                 return;
             }
             // Step 3: Execute the tool
-            const executionResult = await executeTool(tool, parameters, user.id);
+            const executionResult = await executeTool(tool, parameters, user);
             console.log("Task executed with result: ", executionResult)
 
             //Hot fix -> skip 2nd call on tool success #TODO: implement test and trial
@@ -76,7 +76,7 @@ export class AgentManager {
                         }
                         storeMessage(db_messageObject).catch(() => {})
                     }
-                    const execution_retry_result = await executeTool(tool, new_parameters,  user.id)
+                    const execution_retry_result = await executeTool(tool, new_parameters,  user)
                     // Get new tool feedback to determine if another retry is needed
                     const toolFeedbackRetry = await callLLMToolFeedback(
                         message,
