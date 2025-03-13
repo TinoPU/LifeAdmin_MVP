@@ -28,11 +28,14 @@ export async function createTaskTool(
         });
     }
 
+    const dueDate = new Date(properties.due_date).getTime() + (user.user_timezone ?? 1) * 60 * 60 * 1000;
+    const dueDate_as_string = new Date(dueDate).toISOString();
+
 
     // Create Task
     const taskResponse = await createTask({
         name: properties.name,
-        due_date: properties.due_date,
+        due_date: dueDate_as_string,
         task_description: properties.description || "",
         source: "whatsapp",
         user_id: user.id
@@ -53,7 +56,6 @@ export async function createTaskTool(
 
     let reminders = []
     const now = Date.now();
-    const dueDate = new Date(properties.due_date).getTime() + (user.user_timezone ?? 1) * 60 * 60 * 1000;
 
     // Add reminders #TODO: add dynamic reminder schedule at some point
     const reminder_1_5h = new Date(dueDate - 1.5 * 60 * 60 * 1000).toISOString();
