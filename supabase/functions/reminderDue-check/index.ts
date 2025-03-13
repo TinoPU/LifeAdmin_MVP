@@ -29,16 +29,18 @@ const supabaseClient = createClient(
 
 serve(async () => {
   // 1. Fetch reminders that are due
-  const {data: dueReminders, error} = await supabaseClient
+  const {data: dueReminders, reminderError} = await supabaseClient
       .from('reminders')
       .select('*')
       .eq('status', 'scheduled')
       .lte('reminder_time', new Date().toISOString())
 
-  if (error) {
-    console.error('Error fetching due reminders:', error)
+  if (reminderError) {
+    console.error('Error fetching due reminders:', reminderError)
     return new Response('Error fetching reminders', {status: 500})
   }
+
+  console.log("remindersObject: ", dueReminders)
 
   if (dueReminders.length < 1) {
     console.log("No Reminders due")
@@ -65,18 +67,20 @@ serve(async () => {
   }
 
     // 1. Fetch tasks that are due
-    const {data: dueTasks, error} = await supabaseClient
+    const {data: dueTasks, taskError} = await supabaseClient
         .from('tasks')
         .select('*')
         .eq('status', 'pending')
-        .lte('due_time', new Date().toISOString())
+        .lte('due_date', new Date().toISOString())
 
-    if (error) {
-      console.error('Error fetching due tasks:', error)
+    if (taskError) {
+      console.error('Error fetching due tasks:', taskError)
       return new Response('Error fetching tasks', {status: 500})
     }
 
-    if (dueTasks.length < 1) {
+  console.log("taskObject: ", dueTasks)
+
+  if (dueTasks.length < 1) {
       console.log("No Tasks due")
     }
 

@@ -7,13 +7,13 @@ const router = express.Router();
 // WHATSAPP ROUTES
 router.post("/", async (req: Request, res: Response) => {
     try {
-
         const body = req.body;
         await handleIncomingWAWebhook(body)
         res.status(200).send({ status: "Message processed." });
     }
     catch (err) {
-        res.status(500).json({ error: (err as Error).message });
+        console.log("Couldn't process Data: ",req.body)
+        res.status(200).send({ status: "Data received." });
     }
 });
 
