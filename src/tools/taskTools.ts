@@ -69,7 +69,7 @@ export async function createTaskTool(
         reminders.push(reminder_1d);
     }
 
-    if (reminders.length == 0) {
+    if (reminders.length === 0) {
         return Promise.resolve({
             success: true,
             message: "Task and Reminders created successfully"
@@ -89,9 +89,6 @@ export async function createTaskTool(
     }
 
     return Promise.all(reminderResponses).then(async (responses) => {
-        if (responses.length <= 1) {
-            throw new Error(`Failed to create reminders, supabase responses: ${responses}`)
-        }
         // Check the success of each reminder response
         for (const response of responses) {
             if (!response) {
