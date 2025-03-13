@@ -28,7 +28,7 @@ export async function createTaskTool(
         });
     }
 
-    const dueDate = new Date(properties.due_date).getTime() + (user.user_timezone ?? 1) * 60 * 60 * 1000;
+    const dueDate = new Date(properties.due_date).getTime() - (user.user_timezone ?? 1) * 60 * 60 * 1000;
     const dueDate_as_string = new Date(dueDate).toISOString();
 
 
