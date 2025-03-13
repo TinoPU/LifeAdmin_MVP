@@ -78,7 +78,7 @@ export async function createTaskTool(
 
     let reminderResponses = [];
 
-    for (const reminder of reminders[0]) {
+    for (const reminder of reminders) {
         const reminderResponse = createReminder({
             reminder_time: reminder,
             task_id: taskResponse.id,
