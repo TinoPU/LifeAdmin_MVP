@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import {ToolResult, ToolSchema} from "../tools/toolRegistry";
 import {Task} from "../types/db";
+import {UserContext} from "../types/agent";
 
 dotenv.config()
 
@@ -36,7 +37,7 @@ export async function generateUserMessageResponse(userMessage: string) {
     }
 }
 
-export async function callLLMOrchestration(userMessage: string, history: any[], toolSchema:any[]) {
+export async function callLLMOrchestration(userMessage: string, userContext:UserContext, history: any[], toolSchema:any[]) {
     try {
         const exampleString: string = `<examples>\n<example>\n<CONVERSATION_HISTORY>\nuser:active\nagent:Hesch mi grad aktiviert? 😄 Bin ready zum helfe mit dim supabase setup! Wottsch immer no wüsse, wie Reminders/Tasks erstellsch? Säg mer eifach wieviel Details du scho hesch, denn chani besser helfe.\nuser:Wie chani amne agent wie dir möglichkeit geh tasks und reminders i minere supabase kreiere?\nagent:Ey, mega idee! 😎 Für reminders in supabase müesstisch wahrscheinlich en API-Verbindig ufsetze. Chönnt dir bi de implementation helfe, aber bruch details vo dim setup. Hesch scho en schema im Chopf oder söllemer das zäme usdenke?\nuser:bisch no wach\nuser: oder so\nagent:Klar bin i no wach! 😊 Für mich gits kei Schlafensziit. Was lauft? Immerno am tüftle mit supabase oder eifach chli am plaudere?\nuser: wie gahts so?\n</CONVERSATION_HISTORY>\n<TOOL_SCHEMA>\ncreate_task: {\n        function: createTaskTool,\n        schema: {\n            name: "create_task",\n            description: "Creates a new task with a due date and a description and generates a reminder schedule.",\n            input_schema: {\n                type: "object",\n                properties: {\n                    \"name\": {\n                        type: \"string\",\n                        description: \"The name of the task.\"\n                    },\n                    \"due_date\": {\n                        type: \"string\",\n                        description: \"The due date of the task (ISO 8601 format) it must contain a time (this can be an estimate if no explicit time is provided).\"\n                    },\n                    \"task_description\": {\n                        type: \"string\",\n                        description: \"Supplementary info about what the task is about\"\n                    },\n                    \"reminder_info\": {\n                        type: \"string\",\n                        description: \"Supplementary info the user may have provided that can help create a reminder schedule\"\n                    }\n                },\n                required: [\"name\", \"due_date\"]\n            }\n        }\n    }\n</TOOL_SCHEMA>\n<ideal_output>\n{\n\"tool\": \"none\",\n\"parameters\": {},\n\"response\": \"Perfect! Looking forward to helping with your project planning tomorrow! 👌 Get some good rest tonight and we'll tackle it fresh!\"\n}\n</ideal_output>\n</example>\n</examples>\n`;
         const promptText: string = `Here is the conversation history for context:
@@ -46,6 +47,11 @@ ${userMessage}
 <conversation_history>
 ${JSON.stringify(history, null, 2)}
 </conversation_history>
+
+Here is additional info about the user for you: 
+<userContext>
+${JSON.stringify(userContext, null, 2)}
+</userContext>
 
 You are an AI assistant designed to manage a user's tasks and reminders through a chat interface. You should adapt your language to match the user's (German, English, Swiss German, etc.) and write in a casual, natural chatting style. Keep your messages short (1-2 lines) and informal, like a colleague. Use incomplete sentences and typical everyday expressions. Avoid perfect grammar and long explanations. React to the tone and style of the user.
 
@@ -134,13 +140,18 @@ Remember to always provide structured JSON output as requested by the user. Resp
 }
 
 
-export async function callLLMToolFeedback(userMessage: string, history: any[], selectedTool: ToolSchema | string, parameters:any[], executionResult:ToolResult) {
+export async function callLLMToolFeedback(userMessage: string, userContext:UserContext, history: any[], selectedTool: ToolSchema | string, parameters:any[], executionResult:ToolResult) {
     try {
         const prompt: string = `You are an AI assistant designed to help users by executing tools and providing responses in a conversational context. Your task is to process the given information, determine the appropriate action, and respond in a structured JSON format.
 Here's the information you need to consider:
 <latest_message>
 ${userMessage}
 </latest_message>
+
+Here is additional info about the user for you: 
+<userContext>
+${JSON.stringify(userContext, null, 2)}
+</userContext>
 
 <conversation_history>
 ${JSON.stringify(history, null, 2)}
@@ -228,7 +239,7 @@ Remember, the output should contain ONLY the JSON object, with no additional tex
     }
 }
 
-export async function generateReminderMessage(task: Task) {
+export async function generateReminderMessage(task: Task, userContext: UserContext, history:any[]) {
     try {
         const reminderPrompt = `You are an AI assistant tasked with reminding a user about a task. You will be given task information and the user's preferred language. Your goal is to create a short, casual reminder that feels natural and friendly.
 
@@ -236,6 +247,16 @@ Here's the task information:
 <task>
 ${JSON.stringify(task, null, 2)}
 </task>
+
+Here is additional info about the user for you: 
+<userContext>
+${JSON.stringify(userContext, null, 2)}
+</userContext>
+
+Here is the conversation history for context
+<conversation_history>
+${JSON.stringify(history, null, 2)}
+</conversation_history>
 
 Follow these steps to create the reminder:
 

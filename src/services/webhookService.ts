@@ -6,6 +6,7 @@ import {AgentManager} from "../assistant/agentManager";
 import {Reminder, SupabaseDueWebhook, Task, User} from "../types/db";
 import {generateReminderMessage} from "./llmService";
 import sendMessage from "./messageService";
+import conversationService from "./conversationService";
 
 export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
     const messageObject = payload.entry[0].changes[0].value.messages[0]
@@ -40,7 +41,9 @@ export const handleIncomingSupabaseWebhook = async (data: SupabaseDueWebhook) =>
             throw new Error("Invalid payload type");
         }
 
-        const response_message = await generateReminderMessage(task) || "irgendwas steht noch an";
+        const history = await conversationService.getRecentMessages(data.payload.user_id);
+
+        const response_message = await generateReminderMessage(task, user, history) || "irgendwas steht noch an";
         await sendMessage(user.wa_id, response_message);
     } catch (error) {
         console.error("Error handling webhook:", error);
