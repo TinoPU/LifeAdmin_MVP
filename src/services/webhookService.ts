@@ -10,6 +10,7 @@ import sendMessage from "./messageService";
 export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
     const messageObject = payload.entry[0].changes[0].value.messages[0]
     const user_id = await fetchUserId(payload.entry[0].changes[0].value.contacts[0])
+    console.log("user id is: ", user_id)
 
     if (messageObject.text) {
         // await cacheWhatsappMessage(user_id, "user", messageObject.text?.body, messageObject.timestamp)
