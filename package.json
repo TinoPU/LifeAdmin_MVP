@@ -25,6 +25,7 @@
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.10",
+    "supabase": "^2.19.6",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.2"
   }
