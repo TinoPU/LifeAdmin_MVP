@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import {handleIncomingWAWebhook} from "../services/webhookService";
+import {handleIncomingSupabaseWebhook, handleIncomingWAWebhook} from "../services/webhookService";
 
 const router = express.Router();
 
@@ -40,6 +40,7 @@ router.post("/supabase", async (req: Request, res: Response) => {
 
         const body = req.body;
         console.log(body)
+        await handleIncomingSupabaseWebhook(body)
         res.status(200).send({ status: "Message processed." });
     }
     catch (err) {

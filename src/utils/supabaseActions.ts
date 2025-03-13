@@ -160,6 +160,21 @@ export async function createTask(task: Task) {
 
 }
 
+export async function getTask(task_id: string) {
+    const { data, error } = await supabase
+        .from("tasks")
+        .select("*") // Select all columns, modify as needed
+        .eq("id", task_id) // Filter by user_id
+        .single(); // Expect a single result
+
+    if (error) {
+        console.error("Error fetching task:", error);
+        return null; // Handle error appropriately
+    }
+
+    return data;
+}
+
 export async function createReminder (reminder: Reminder) {
     const {data, error} = await supabase.from("reminders").insert(reminder).select("id").single()
     if (error) {

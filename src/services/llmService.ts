@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import {ToolResult, ToolSchema} from "../tools/toolRegistry";
+import {Task} from "../types/db";
 
 dotenv.config()
 
@@ -227,3 +228,56 @@ Remember, the output should contain ONLY the JSON object, with no additional tex
     }
 }
 
+export async function generateReminderMessage(task: Task) {
+    try {
+        const reminderPrompt = `You are an AI assistant tasked with reminding a user about a task. You will be given task information and the user's preferred language. Your goal is to create a short, casual reminder that feels natural and friendly.
+
+Here's the task information:
+<task>
+${JSON.stringify(task, null, 2)}
+</task>
+
+Follow these steps to create the reminder:
+
+1. Analyze the task information, focusing on the name, due_date, and any other relevant details.
+
+2. Adapt your language to match the user's preferred language. If you're not fluent in the specified language, use a casual version of English or the closest language you're comfortable with.
+
+3. Craft your response in a casual, friendly tone. Imagine you're chatting with a colleague or friend.
+
+4. Keep your reminder short (1-2 lines) and informal. Use incomplete sentences and common everyday expressions where appropriate.
+
+5. Avoid perfect grammar and long explanations. Match the user's likely tone and style.
+
+6. If the due date is today or tomorrow, create a sense of urgency without being stressful.
+
+Here are some examples of good reminders:
+
+English: "Hey! Don't forget about [task name] today."
+German: "Du, [task name] steht heute an!"
+Swiss German: "Sali! Vergiss [task name] hüt nöd."`;
+        const msg = await anthropic.messages.create({
+            model: "claude-3-7-sonnet-20250219",
+            max_tokens: 20000,
+            temperature: 1,
+            messages: [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": reminderPrompt
+                        }
+                    ]
+                }
+            ]
+        });
+        return msg.content
+            .filter((block: any) => block.type === "text") // Ensure it's a text block
+            .map((block: any) => block.text) // Extract text
+            .join(" "); // Join all text blocks into one string
+    } catch (error) {
+        console.log(error)
+        return
+    }
+}
