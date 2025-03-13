@@ -3,6 +3,7 @@ import supabase from "../database/supabaseClient";
 import {Contact} from "../types/incomingWAObject/WAIncomingValueObject";
 import {Message, wa_metadata} from "../types/message";
 import {Reminder, Task} from "../types/db";
+import {getTzFromPhone} from "./transformationUtils";
 
 export async function storeWhatsAppMessage(message: WAIncomingMessage, user_id: string, actor:string, response?: string, response_sent_at?: string, parent_message_id?: string) {
     try {
@@ -114,7 +115,8 @@ export async function createNewUser(contact: Contact) {
     const user = {
         wa_user_id: contact.user_id,
         wa_id: contact.wa_id,
-        name: contact.profile.name
+        name: contact.profile.name,
+        user_timezone: getTzFromPhone(contact.wa_id)
     }
     const {data, error} = await supabase.from("users").insert([user]).select("id").single();
 

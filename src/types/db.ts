@@ -8,7 +8,9 @@ export interface User {
     wa_id?: string;
     name?: string;
     preferences?: Record<string, any>; // Optional JSON field
-    updated_at?: string
+    updated_at?: string;
+    user_timezone?: number
+
 }
 
 export interface Task {
@@ -36,7 +38,7 @@ export interface Reminder {
     user_id?: UUID;
     reminder_time: string;
     status?: "scheduled" | "sent" | "cancelled";
-    updated_at?: string
+    updated_at?: string;
 }
 
 export interface SupabaseDueWebhook {
