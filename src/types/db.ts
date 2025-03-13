@@ -38,3 +38,9 @@ export interface Reminder {
     status?: "scheduled" | "sent" | "cancelled";
     updated_at?: string
 }
+
+export interface SupabaseDueWebhook {
+    notification: string,
+    payload_type: "reminder" | "task",
+    payload: Reminder | Task
+}

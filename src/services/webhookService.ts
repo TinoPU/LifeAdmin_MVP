@@ -1,10 +1,11 @@
 import {WAIncomingObject} from "../types/incomingWAObject/WAIncomingObject";
 import {fetchUserId} from "../utils/userUtils";
 import {cacheWhatsappMessage} from "../utils/redisActions";
-import {storeWhatsAppMessage} from "../utils/supabaseActions";
+import {getUser, storeWhatsAppMessage} from "../utils/supabaseActions";
 import {AgentManager} from "../assistant/agentManager";
+import {Reminder, SupabaseDueWebhook, Task, User} from "../types/db";
 
-export const handleIncomingWebhook = async (payload: WAIncomingObject) => {
+export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
     const messageObject = payload.entry[0].changes[0].value.messages[0]
     const user_id = await fetchUserId(payload.entry[0].changes[0].value.contacts[0])
 
@@ -18,6 +19,21 @@ export const handleIncomingWebhook = async (payload: WAIncomingObject) => {
     }
 }
 
+
+export const handleIncomingSupabaseWebhook = async (data: SupabaseDueWebhook) => {
+    if (data.payload?.user_id) {
+        const user: User = await getUser(data.payload.user_id)
+    }
+
+    if (data.payload_type === "reminder") {
+        const payload: Reminder  = data.payload as Reminder
+    }
+
+    if (data.payload_type === "task") {
+        const payload: Task  = data.payload as Task
+    }
+
+}
 
 
 
