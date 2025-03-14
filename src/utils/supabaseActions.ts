@@ -118,14 +118,14 @@ export async function createNewUser(contact: Contact) {
         name: contact.profile.name,
         user_timezone: getTzFromPhone(contact.wa_id)
     }
-    const {data, error} = await supabase.from("users").insert([user]).select("id").single();
+    const {data, error} = await supabase.from("users").insert([user]).select("*").single();
 
     if (error) {
         console.log(error)
         throw new Error("Failed to create new user");
     }
 
-    return data.id
+    return data
 }
 
 export async function getUser(user_id: string) {

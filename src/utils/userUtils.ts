@@ -30,7 +30,7 @@ export async function fetchUserId(contact: Contact) {
         // 3. Create user if they don't exist
         const newUser = await createNewUser(contact);
         redisClient.set(redisKey, newUser, {EX: 86400}).catch()
-        return newUser;
+        return newUser as User;
     }
     // 4. Store user_id in Redis for future requests
     await redisClient.set(redisKey, JSON.stringify(data), {EX: 86400}); // Expires in 24 hours
