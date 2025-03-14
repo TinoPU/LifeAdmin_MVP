@@ -11,6 +11,7 @@ export async function constructTaskContext (user: User) {
             const taskContext: TaskContextObject[] = []
             for (const task of tasks) {
                 const taskObject: TaskContextObject = {
+                    task_id: task.id || "",
                     name: task.name,
                     task_description: task.task_description,
                     due_date: task.due_date,

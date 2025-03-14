@@ -1,3 +1,5 @@
+import {UUID} from "./db";
+
 export interface UserContext {
     name?: string,
     time_at_user_location?: string
@@ -5,6 +7,7 @@ export interface UserContext {
 }
 
 export interface TaskContextObject {
+    task_id:UUID
     name?: string,
     task_description?: string,
     due_date?: string,
