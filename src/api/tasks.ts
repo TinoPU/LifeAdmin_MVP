@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { createTask } from "../services/taskService";
+import {createTask} from "../utils/supabaseActions";
 
 const router = express.Router();
 

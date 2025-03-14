@@ -254,7 +254,7 @@ export async function getTasksForUser (user_id:string) {
     return {
         success: true,
         message: `Tasks checked successfully`,
-        data: data
+        data: data as Task[]
     };
 }
 

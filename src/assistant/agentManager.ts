@@ -7,8 +7,8 @@ import {WAIncomingMessage} from "../types/incomingWAObject/WAIncomingMessage";
 import {cacheWhatsappMessage} from "../utils/redisActions";
 import {Message} from "../types/message";
 import {User} from "../types/db";
-import {UserContext} from "../types/agent";
-import {constructUserContext} from "../utils/userUtils";
+import {AgentContext} from "../types/agent";
+import {constructContext} from "../utils/agentUtils";
 
 export class AgentManager {
     async handleNewRequest(user: User, parent_message_id: string, messageObject: WAIncomingMessage) {
@@ -27,10 +27,10 @@ export class AgentManager {
             const history = await conversationService.getRecentMessages(user.id);
             cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => console.error("Error caching WhatsApp message:", error));
 
-            const userContext: UserContext = constructUserContext(user)
+            const context: AgentContext = await constructContext(user)
 
             const toolSchema = getToolSchema();
-            const llmResponse = await callLLMOrchestration(message,userContext, history, toolSchema);
+            const llmResponse = await callLLMOrchestration(message,context, history, toolSchema);
             const { tool, parameters, response } = llmResponse;
 
             // Step 2: LLM Response check
@@ -57,7 +57,7 @@ export class AgentManager {
             const tool_description = getToolByName(tool) || tool
 
             // Step 4: Pass execution result to LLM for confirmation
-            const toolFeedback = await callLLMToolFeedback(message,userContext, history, tool_description, parameters, executionResult);
+            const toolFeedback = await callLLMToolFeedback(message,context.userContext, history, tool_description, parameters, executionResult);
             let {next_action: next_action, response: finalResponse, new_parameters = {}} = toolFeedback;
 
             // Step 5: Handle tool feedback
@@ -80,7 +80,7 @@ export class AgentManager {
                     // Get new tool feedback to determine if another retry is needed
                     const toolFeedbackRetry = await callLLMToolFeedback(
                         message,
-                        userContext,
+                        context.userContext,
                         history,
                         tool_description,
                         new_parameters,
