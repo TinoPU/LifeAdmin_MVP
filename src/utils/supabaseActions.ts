@@ -5,6 +5,8 @@ import {Message, wa_metadata} from "../types/message";
 import {Reminder, Task, User} from "../types/db";
 import {getTzFromPhone} from "./transformationUtils";
 
+//////Message Methods
+
 export async function storeWhatsAppMessage(message: WAIncomingMessage, user: User, actor:string, response?: string, response_sent_at?: string, parent_message_id?: string) {
     try {
         const messageSentAt = new Date(parseInt(message.timestamp, 10) * 1000).toISOString();
@@ -111,6 +113,26 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user: Use
     }
 }
 
+export async function storeMessage(message:Message) {
+    const {data, error} = await supabase.from("messages").insert([message]).select("id").single();
+    if (error) {
+        console.log(error)
+        return {
+            success: false,
+            message: `Error: Message store failed with error: ${error}`,
+        };
+    }
+    return {
+        success: true,
+        message: `Message stored Successfully: ${data.id}`,
+        id: data.id
+    };
+}
+
+
+
+//// User Methods
+
 export async function createNewUser(contact: Contact) {
     const user = {
         wa_user_id: contact.user_id,
@@ -143,6 +165,9 @@ export async function getUser(user_id: string) {
     return data;
 }
 
+
+//// Task Methods
+
 export async function createTask(task: Task) {
 
     const {data, error} = await supabase.from("tasks").insert(task).select("id").single()
@@ -166,7 +191,7 @@ export async function getTask(task_id: string) {
     const { data, error } = await supabase
         .from("tasks")
         .select("*") // Select all columns, modify as needed
-        .eq("id", task_id) // Filter by user_id
+        .eq("id", task_id) // Filter by task_id
         .single(); // Expect a single result
 
     if (error) {
@@ -176,6 +201,67 @@ export async function getTask(task_id: string) {
 
     return data;
 }
+
+export async function deleteTask (task_id: string) {
+    const {data, error} = await supabase.from("tasks").delete().eq("id", task_id)
+
+    if (error) {
+        return {
+            success: false,
+            message: `Task deletion failed with error: ${error}`
+        }
+    }
+
+    return {
+        success: true,
+        message: `Task deleted Successfully`
+    };
+
+}
+export async function updateTask (task_id:string, task:Task) {
+
+    if (task.id) {
+        task.id = task_id
+    }
+    const {data, error} = await supabase.from("tasks").update(task).eq("id", task_id);
+
+    if (error) {
+        console.log(error)
+        return {
+            success: false,
+            message: `Error: Message store failed with error: ${error}`,
+        };
+    }
+    return {
+        success: true,
+        message: `Task updated Successfully`,
+        id: task_id
+    };
+
+}
+
+
+export async function getTasksForUser (user_id:string) {
+
+    const {data, error} = await supabase.from("tasks").select("*").eq("user_id", user_id)
+    if (error) {
+        console.log(error)
+        return {
+            success: false,
+            message: `Error: Task retrieval method failed with error: ${error}`,
+        };
+    }
+    return {
+        success: true,
+        message: `Tasks checked successfully`,
+        data: data
+    };
+}
+
+
+
+
+///// Reminder Methods
 
 export async function createReminder (reminder: Reminder) {
     const {data, error} = await supabase.from("reminders").insert(reminder).select("id").single()
@@ -189,22 +275,6 @@ export async function createReminder (reminder: Reminder) {
     return {
         success: true,
         message: `Reminder created Successfully: ${data.id}`,
-        id: data.id
-    };
-}
-
-export async function storeMessage(message:Message) {
-    const {data, error} = await supabase.from("messages").insert([message]).select("id").single();
-    if (error) {
-        console.log(error)
-        return {
-            success: false,
-            message: `Error: Message store failed with error: ${error}`,
-        };
-    }
-    return {
-        success: true,
-        message: `Message stored Successfully: ${data.id}`,
         id: data.id
     };
 }

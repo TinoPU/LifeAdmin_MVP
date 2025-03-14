@@ -4,6 +4,7 @@ import supabase from "../database/supabaseClient";
 import {createNewUser} from "./supabaseActions";
 import {User} from "../types/db";
 import {UserContext} from "../types/agent";
+import {formatDate} from "./transformationUtils";
 
 
 export async function fetchUserId(contact: Contact) {
@@ -45,7 +46,7 @@ export function constructUserContext (user: User) {
 
     const userContext: UserContext = {
         name: user.name,
-        time_at_user_location: userTime,
+        time_at_user_location: formatDate(userTime),
         language: user.language
     }
 

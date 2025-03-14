@@ -1,5 +1,5 @@
-import {createReminder, createTask} from "../utils/supabaseActions";
-import {User} from "../types/db";
+import {createReminder, createTask, deleteTask, updateTask} from "../utils/supabaseActions";
+import {Task, User} from "../types/db";
 
 
 export async function createTaskTool(
@@ -111,4 +111,33 @@ export async function createTaskTool(
             message: `Task created successfully, but at least one reminder failed: ${error.message}`
         };
     });
+}
+
+export async function modifyTaskTool(
+    properties: {
+        task_id: string,
+        method: string,
+        task ? : Task,
+        reminder_info ? : string
+    }, user: User) {
+    if (properties.method === "DELETE") {
+        return await deleteTask(properties.task_id)
+    }
+    if (properties.method === "UPDATE") {
+        if (!properties.task) {
+            return {
+                success: false,
+                message: `No task parameters provided`
+            }
+        }
+        else {
+            return await updateTask(properties.task_id, properties.task)
+        }
+    }
+    else {
+        return {
+            success: false,
+            message: `Method not supported: ${properties.method}`
+        }
+    }
 }
