@@ -43,6 +43,9 @@ export const handleIncomingSupabaseWebhook = async (data: SupabaseDueWebhook) =>
 
         const history = await conversationService.getRecentMessages(data.payload.user_id);
 
+        //format time for user
+        task.due_date = new Date(new Date(task.due_date).getTime() + (user.user_timezone || 1) * 60 * 60 * 1000).toISOString();
+
         const response_message = await generateReminderMessage(task, user, history) || "irgendwas steht noch an";
         await sendMessage(user.wa_id, response_message);
     } catch (error) {
