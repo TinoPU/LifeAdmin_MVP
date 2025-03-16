@@ -48,6 +48,8 @@ export const handleIncomingSupabaseWebhook = async (data: SupabaseDueWebhook) =>
 
         const response_message = await generateReminderMessage(task, user, history) || "irgendwas steht noch an";
         await sendMessage(user.wa_id, response_message);
+        const timeNow = new Date().toISOString();
+        await cacheWhatsappMessage(user, "agent", response_message,timeNow)
     } catch (error) {
         console.error("Error handling webhook:", error);
         throw error;
