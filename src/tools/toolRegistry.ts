@@ -35,7 +35,7 @@ export const toolRegistry: Record<string, {
         function: createTaskTool,
         schema: {
             name: "create_task",
-            description: "Creates a new task with a due date and a description and generates a reminder schedule.",
+            description: "Creates a new task in the database with a due date and a description. The function also allows to create reminders for the user. Multiple reminders can be created, each must be represented as a number in minutes before a task is due. Important tasks should have more reminders than non important tasks, but no task should have more than 5.",
             input_schema: {
                 type: "object",
                 properties: {
@@ -51,9 +51,9 @@ export const toolRegistry: Record<string, {
                         type: "string",
                         description: "Supplementary info about what the task is about"
                     },
-                    "reminder_info": {
-                        type: "string",
-                        description: "Supplementary info the user may have provided that can help create a reminder schedule"
+                    "reminder_array": {
+                        type: "array",
+                        description: "An array of integers. Each integer represents one reminder in minutes before a task is due. The maximum reminders are 5."
                     }
                 },
                 required: ["name", "due_date"]

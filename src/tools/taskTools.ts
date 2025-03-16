@@ -7,7 +7,7 @@ export async function createTaskTool(
         name: string,
         due_date: string,
         description ? : string,
-        reminder_info ? : string
+        reminder_array? : number[]
     }, user: User) {
     const missingFields = [];
 
@@ -54,63 +54,48 @@ export async function createTaskTool(
         })
     }
 
-    let reminders = []
-    const now = Date.now();
+    if (properties.reminder_array) {
+        let reminderResponses = [];
+        for (const reminder of properties.reminder_array) {
+            const reminderDate = new Date(dueDate - reminder * 60 * 1000).toISOString();
+            const reminderResponse = createReminder({
+                reminder_time: reminderDate,
+                task_id: taskResponse.id,
+                user_id: user.id
 
-    // Add reminders #TODO: add dynamic reminder schedule at some point
-    const reminder_1_5h = new Date(dueDate - 1.5 * 60 * 60 * 1000).toISOString();
-    const reminder_1d = new Date(dueDate - 24 * 60 * 60 * 1000).toISOString();
-
-    // Determine which reminders to set
-    if (dueDate - now > 3 * 60 * 60 * 1000) { // More than 3 hours away
-        reminders.push(reminder_1_5h);
-    }
-    if (dueDate - now > 48 * 60 * 60 * 1000) { // More than 1 day away
-        reminders.push(reminder_1d);
-    }
-
-    if (reminders.length === 0) {
-        return Promise.resolve({
-            success: true,
-            message: "Task and Reminders created successfully"
-        })
-    }
-
-    let reminderResponses = [];
-
-    for (const reminder of reminders) {
-        const reminderResponse = createReminder({
-            reminder_time: reminder,
-            task_id: taskResponse.id,
-            user_id: user.id
-
-        });
-        reminderResponses.push(reminderResponse);
-    }
-
-    return Promise.all(reminderResponses).then(async (responses) => {
-        // Check the success of each reminder response
-        for (const response of responses) {
-            if (!response) {
-                throw new Error(`Failed to create reminder, supabase response: ${response}`)
-            }
-            if (!response.success) {
-                // Throw an error if any reminder creation fails
-                throw new Error(`Failed to create reminder: ${response.message}`);
-            }
+            });
+            reminderResponses.push(reminderResponse);
         }
-        console.log("All reminders created:", responses);
+
+        return Promise.all(reminderResponses).then(async (responses) => {
+            // Check the success of each reminder response
+            for (const response of responses) {
+                if (!response) {
+                    throw new Error(`Failed to create reminder, supabase response: ${response}`)
+                }
+                if (!response.success) {
+                    // Throw an error if any reminder creation fails
+                    throw new Error(`Failed to create reminder: ${response.message}`);
+                }
+            }
+            console.log("All reminders created:", responses);
+            return Promise.resolve({
+                success: true,
+                message: "Task and Reminders created successfully"
+            })
+        }).catch((error) => {
+            console.error("Error creating reminders:", error.message);
+            return {
+                success: false,
+                message: `Task created successfully, but at least one reminder failed: ${error.message}`
+            };
+        });
+    } else {
         return Promise.resolve({
             success: true,
             message: "Task and Reminders created successfully"
         })
-    }).catch((error) => {
-        console.error("Error creating reminders:", error.message);
-        return {
-            success: false,
-            message: `Task created successfully, but at least one reminder failed: ${error.message}`
-        };
-    });
+    }
 }
 
 export async function modifyTaskTool(
