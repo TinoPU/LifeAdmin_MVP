@@ -73,7 +73,7 @@ Please follow these steps:
 2. Determine if a tool should be used (create_task, set_reminder, or none).
 3. If a tool is needed, extract all relevant parameters.
 4. If no tool applies, formulate a natural response.
-5. Structure your output as JSON.
+5. Structure your output as JSON ensuring all string values are enclosed in double quotes and contain no unescaped quotes inside.
 
 Before providing your final response, wrap your analysis and decision-making process in <analysis> tags. In this section:
 1. Summarize the user's message.
@@ -81,7 +81,7 @@ Before providing your final response, wrap your analysis and decision-making pro
 3. For the chosen tool (if any), list out each required parameter and note whether it's present in the user input.
 4. If no tool is chosen, note key points to address in the natural response.
 
-Your final output must be in the following JSON format:
+Your final output must be in the following JSON format ensuring all string values are enclosed in double quotes and contain no unescaped quotes inside:
 
 {
   "tool": "create_task" | "set_reminder" | "none",
@@ -190,7 +190,7 @@ Process:
    - If uncertain: ask the user how to proceed
    - If you can fix the error: retry the tool with updated parameters.
 4. Formulate your response according to the determined action.
-5. Structure your response in the required JSON format.
+5. Structure your response in the required JSON format ensuring all string values are enclosed in double quotes and contain no unescaped quotes inside.
 
 Show your thought process inside <analysis> tags:
 1. Quote relevant parts of the conversation history and execution result.
@@ -199,7 +199,7 @@ Show your thought process inside <analysis> tags:
 4. Draft a brief response (aim for 10-20 words) in the user's language and style.
 
 Output Format:
-Your final output must be a JSON object with the following structure:
+Your final output must be a JSON object with the following structure ensuring all string values are enclosed in double quotes and contain no unescaped quotes inside:
 
 {
   "next_action": "retry_tool" | "ask_user" | "confirm_success",
