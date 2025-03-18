@@ -20,7 +20,8 @@ async function processEmbeddingTask() {
     // Use BLPOP to block and pop a task from the "embedding_tasks" list
     const task = await redis.blpop("embedding_tasks", 0);
     if (task) {
-        const [_, value] = task;  // value is your task payload (e.g., JSON string)
+        const [_, value] = task;
+        console.log("value in tas queue is: ", value)// value is your task payload (e.g., JSON string)
         const { message_id, messageText } = JSON.parse(value);
 
         try {
