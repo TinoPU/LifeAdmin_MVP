@@ -12,13 +12,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const redis = await connect({
     hostname: Deno.env.get("REDIS_HOST")!,
     port: parseInt(Deno.env.get("REDIS_PORT") || "6379"),
-    password: Deno.env.get("REDIS_PASSWORD") || undefined,
+    password: Deno.env.get("REDIS_PW") || undefined,
 });
 
 // Example: Process one task from a Redis list (your queue)
 async function processEmbeddingTask() {
     // Use BLPOP to block and pop a task from the "embedding_tasks" list
-    const task = await redis.blpop("embedding_tasks", 0);
+    const task = await redis.command("BLPOP", "embedding_tasks", "1");
     if (task) {
         const [_, value] = task;  // value is your task payload (e.g., JSON string)
         const { message_id, messageText } = JSON.parse(value);
