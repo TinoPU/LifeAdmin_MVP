@@ -22,12 +22,8 @@ redisClient.on('error', (err) => console.error('Redis Client Error', err));
         console.error('❌ Redis connection error:', err);
     }
 })();
+export const embeddingQueue = new Queue("embedding_tasks", { connection: {url: process.env.REDIS_REDIS_URL|| "" }});
 
-export const embeddingQueue = new Queue("embedding_tasks", {connection: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || "6379", 10),
-    password: process.env.REDIS_PW
-    }});
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
