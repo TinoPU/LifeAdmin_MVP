@@ -1,4 +1,5 @@
 import { createClient } from 'redis';
+import { Queue } from "bullmq";
 import dotenv from "dotenv";
 
 dotenv.config()
@@ -21,6 +22,11 @@ redisClient.on('error', (err) => console.error('Redis Client Error', err));
         console.error('❌ Redis connection error:', err);
     }
 })();
+
+export const embeddingQueue = new Queue("embeddings", {connection: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || "6379", 10)
+    }});
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
