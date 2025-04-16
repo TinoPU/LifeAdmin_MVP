@@ -22,7 +22,7 @@ if (!PERPLEXITY_API_KEY) {
 export async function askPerplexity(
     properties: {
         messages: Array<{ role: string; content: string }>,
-        model: string
+        model?: string
     }, user:User) {
     // Construct the API endpoint URL and request body
     const url = new URL("https://api.perplexity.ai/chat/completions");
@@ -85,6 +85,5 @@ export async function askPerplexity(
         message: messageContent
     });
 }
-
 
 
