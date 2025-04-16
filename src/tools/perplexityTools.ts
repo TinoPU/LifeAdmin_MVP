@@ -34,6 +34,8 @@ export async function askPerplexity(
         // https://docs.perplexity.ai/api-reference/chat-completions
     };
 
+    console.log("preparing search request")
+
     let response;
     try {
         response = await fetch(url.toString(), {
@@ -47,6 +49,8 @@ export async function askPerplexity(
     } catch (error) {
         throw new Error(`Network error while calling Perplexity API: ${error}`);
     }
+
+    console.log("response: ", response, response.text)
 
     // Check for non-successful HTTP status
     if (!response.ok) {
@@ -68,6 +72,8 @@ export async function askPerplexity(
     } catch (jsonError) {
         throw new Error(`Failed to parse JSON response from Perplexity API: ${jsonError}`);
     }
+
+    console.log("data; ", data)
 
     // Directly retrieve the main message content from the response
     let messageContent = data.choices[0].message.content;
