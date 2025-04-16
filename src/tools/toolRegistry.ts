@@ -94,7 +94,7 @@ export const toolRegistry: Record<string, {
     search_web_with_perplexity: {
         function: askPerplexity,
         schema: {
-            name: "perplexity_ask",
+            name: "search_web_with_perplexity",
             description:
                 "Engages in a conversation using the Sonar API. Which can search the web " +
                 "Accepts an array of messages (each with a role and content) " +
