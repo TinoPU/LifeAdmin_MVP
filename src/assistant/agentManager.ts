@@ -60,6 +60,8 @@ export class AgentManager {
             const toolFeedback = await callLLMToolFeedback(message,context.userContext, history, tool_description, parameters, executionResult);
             let {next_action: next_action, response: finalResponse, new_parameters = {}} = toolFeedback;
 
+            console.log("tool feedback: ", toolFeedback)
+
             // Step 5: Handle tool feedback
             if (next_action === "retry_tool") {
                 let retry_count = 0

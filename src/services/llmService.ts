@@ -186,7 +186,7 @@ Process:
 2. Determine the status of the tool execution: failed, successful, or uncertain.
 3. Based on the status, decide on the next action:
    - If failed or needs more details: generate a clarification request
-   - If successful: confirm the success to the user
+   - If successful: Respond to the user with the new info
    - If uncertain: ask the user how to proceed
    - If you can fix the error: retry the tool with updated parameters.
 4. Formulate your response according to the determined action.
