@@ -35,6 +35,8 @@ export async function askPerplexity(
     };
 
     console.log("preparing search request")
+    console.log("url: ", url)
+    console.log("body: ", body)
 
     let response;
     try {
