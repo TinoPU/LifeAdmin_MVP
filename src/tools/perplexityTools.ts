@@ -27,7 +27,7 @@ export async function askPerplexity(
     // Construct the API endpoint URL and request body
     const url = new URL("https://api.perplexity.ai/chat/completions");
     const body = {
-        model: "sonar", // Model identifier passed as parameter
+        model: "sonar-pro", // Model identifier passed as parameter
         messages: properties.messages,
         max_tokens: 200,
         // Additional parameters can be added here if required (e.g., max_tokens, temperature, etc.)
