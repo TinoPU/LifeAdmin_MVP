@@ -29,6 +29,7 @@ export async function askPerplexity(
     const body = {
         model: "sonar", // Model identifier passed as parameter
         messages: properties.messages,
+        max_tokens: 200,
         // Additional parameters can be added here if required (e.g., max_tokens, temperature, etc.)
         // See the Sonar API documentation for more details:
         // https://docs.perplexity.ai/api-reference/chat-completions
@@ -52,30 +53,31 @@ export async function askPerplexity(
         throw new Error(`Network error while calling Perplexity API: ${error}`);
     }
 
-    console.log("response: ", response, response.text)
 
     // Check for non-successful HTTP status
     if (!response.ok) {
         let errorText;
         try {
             errorText = await response.text();
+            console.log(errorText)
         } catch (parseError) {
             errorText = "Unable to parse error response";
         }
         throw new Error(
             `Perplexity API error: ${response.status} ${response.statusText}\n${errorText}`
         );
+
     }
 
     // Attempt to parse the JSON response from the API
     let data;
     try {
         data = await response.json();
+        console.log(data)
     } catch (jsonError) {
         throw new Error(`Failed to parse JSON response from Perplexity API: ${jsonError}`);
     }
 
-    console.log("data; ", data)
 
     // Directly retrieve the main message content from the response
     let messageContent = data.choices[0].message.content;
