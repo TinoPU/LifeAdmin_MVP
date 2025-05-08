@@ -50,7 +50,7 @@ export async function callLLMOrchestration(userMessage: string, context:AgentCon
             history: JSON.stringify(history, null, 2),
             userContext: JSON.stringify(context.userContext, null, 2),
             taskContext: JSON.stringify(context.taskContext, null, 2),
-            toolSchema: JSON.stringify(context.taskContext, null, 2)
+            toolSchema: JSON.stringify(toolSchema, null, 2)
         });
 
 
