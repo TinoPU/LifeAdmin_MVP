@@ -11,8 +11,9 @@ class ConversationService {
         const redisKey = `conversation:${user_id}`;
         const recentMessages = await redisClient.lRange(redisKey, 0, 0);
         const latestMessage = recentMessages[0];
-        console.log("message: ", message, " latestMessage: ", latestMessage)
-        return message === latestMessage;
+        const cleanedLatestMessage = latestMessage.replace(/\[.*?\s*user:\s*/, '').trim();
+        console.log(message, cleanedLatestMessage)
+        return message === cleanedLatestMessage;
     }
 }
 
