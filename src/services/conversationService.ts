@@ -8,12 +8,11 @@ class ConversationService {
     }
 
     async isStillLatestUserMessage(user_id: string, message: string) {
-        const redisKey = `conversation:${user_id}`;
+        const redisKey = `latestMessage:${user_id}`
         const recentMessages = await redisClient.lRange(redisKey, 0, 0);
         const latestMessage = recentMessages[0];
-        const cleanedLatestMessage = latestMessage.replace(/\[.*?\s*user:\s*/, '').trim();
-        console.log(message, cleanedLatestMessage)
-        return message === cleanedLatestMessage;
+        console.log(message, latestMessage)
+        return message === latestMessage;
     }
 }
 

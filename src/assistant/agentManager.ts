@@ -29,7 +29,7 @@ export class AgentManager {
 
             // Step 1: Orchestration
             const history = await conversationService.getRecentMessages(user.id);
-            await cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => console.error("Error caching WhatsApp message:", error));
+            cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => console.error("Error caching WhatsApp message:", error));
             const context: AgentContext = await constructContext(user)
             const toolSchema = getToolSchema();
             await langfuse.getPrompt("LLMOrchestration", undefined, {

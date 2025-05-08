@@ -10,3 +10,9 @@ export async function cacheWhatsappMessage(user: User, actor: string, message: s
     await redisClient.lTrim(redisKey, 0, 9); // Keep last 10 messages
 
 }
+
+export async function cacheLatestUserMessage(user: User, message:string) {
+    const redisKey = `latestMessage:${user.id}`
+    await redisClient.lPush(redisKey, message)
+    await redisClient.lTrim(redisKey, 0, 0)
+}

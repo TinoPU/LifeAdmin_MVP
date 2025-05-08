@@ -1,6 +1,6 @@
 import {WAIncomingObject} from "../types/incomingWAObject/WAIncomingObject";
 import {fetchUserId} from "../utils/userUtils";
-import {cacheWhatsappMessage} from "../utils/redisActions";
+import {cacheLatestUserMessage, cacheWhatsappMessage} from "../utils/redisActions";
 import {getTask, getUser, storeWhatsAppMessage} from "../utils/supabaseActions";
 import {AgentManager} from "../assistant/agentManager";
 import {Reminder, SupabaseDueWebhook, Task, User} from "../types/db";
@@ -15,6 +15,7 @@ export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
 
     if (messageObject.text) {
         const parent_message_id = await storeWhatsAppMessage(messageObject, user, "user")
+        await cacheLatestUserMessage(user,messageObject.text.body)
         const agentManager = new AgentManager();
         const response_message = await agentManager.handleNewRequest(user, parent_message_id, messageObject)
         const timeNow = new Date().toISOString();
