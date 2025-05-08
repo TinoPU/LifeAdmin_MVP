@@ -4,7 +4,7 @@ import {ToolResult, ToolSchema} from "../tools/toolRegistry";
 import {Task} from "../types/db";
 import {AgentContext, UserContext} from "../types/agent";
 import {langfuse} from "./langfuse";
-import type MessageParam from '@anthropic-ai/sdk';
+import {defaultModelConfig} from "../config/modelConfig";
 
 
 dotenv.config()
@@ -40,7 +40,7 @@ export async function generateUserMessageResponse(userMessage: string) {
     }
 }
 
-export async function callLLMOrchestration(userMessage: string, context:AgentContext, history: any[], toolSchema:any[]) {
+export async function callLLMOrchestration(userMessage: string, context:AgentContext, history: any[], toolSchema:any[], trace: any) {
     try {
         const chatPrompt = await langfuse.getPrompt("LLMOrchestration", undefined, {
             type: "chat",
@@ -53,7 +53,6 @@ export async function callLLMOrchestration(userMessage: string, context:AgentCon
             toolSchema: JSON.stringify(context.taskContext, null, 2)
         });
 
-        console.log(compiledChatPrompt)
 
         const messages: {role: "user" | "assistant", content: string}[] = compiledChatPrompt.map(m => {
             return {
@@ -62,18 +61,24 @@ export async function callLLMOrchestration(userMessage: string, context:AgentCon
             };
         });
 
+        const gen = trace.generation({
+            name: "orchestration.call",
+            model: defaultModelConfig.model,
+            modelParameters: { ...defaultModelConfig },
+            input: userMessage,
+            prompt: compiledChatPrompt
+        });
+
         const msg = await anthropic.messages.create({
-            model: "claude-3-7-sonnet-20250219",
-            max_tokens: 5000,
-            temperature: 0.8,
-            system: "Never respond with anything in additional to the JSON.",
+            ...defaultModelConfig,
             messages: messages
         });
         const responseText = msg.content
             .filter(block => block.type === "text")
             .map(block => block.text)
             .join(" ");
-        console.log("model response: ",responseText)
+
+        gen.end(({ output: responseText}));
         return JSON.parse("{" + responseText);
     } catch (error) {
         console.error("Error in callLLMOrchestration:", error);

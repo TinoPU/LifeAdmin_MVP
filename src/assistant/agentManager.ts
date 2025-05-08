@@ -32,20 +32,12 @@ export class AgentManager {
             cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => console.error("Error caching WhatsApp message:", error));
             const context: AgentContext = await constructContext(user)
             const toolSchema = getToolSchema();
-            const prompt = await langfuse.getPrompt("LLMOrchestration", undefined, {
+            await langfuse.getPrompt("LLMOrchestration", undefined, {
                 type: "chat",
             });
-            const gen = trace.generation({
-                name: "orchestration.call",
-                model: "claude-3-7-sonnet-20250219",
-                modelParameters: { temperature: 0.8, max_tokens: 5000 },
-                input: messageObject.text?.body,
-                prompt: prompt
-            });
 
-            const llmResponse = await callLLMOrchestration(message,context, history, toolSchema);
+            const llmResponse = await callLLMOrchestration(message,context, history, toolSchema, trace);
             const { tool, parameters, response } = llmResponse;
-            gen.end({ output: llmResponse});
             trace.event({ name: "orchestration.completed", output: llmResponse });
 
             // Step 2: LLM Response check
