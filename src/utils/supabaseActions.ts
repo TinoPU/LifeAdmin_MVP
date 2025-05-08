@@ -246,7 +246,8 @@ export async function updateTask (task_id:string, task:Task) {
 
 export async function getTasksForUser (user_id:string) {
 
-    const {data, error} = await supabase.from("tasks").select("*").eq("user_id", user_id)
+    const {data, error} = await supabase.from("tasks").select("*").eq("user_id", user_id).order("created_at", { ascending: false })
+        .limit(5);
     if (error) {
         console.log(error)
         return {
