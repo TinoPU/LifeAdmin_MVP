@@ -62,6 +62,7 @@ export class AgentManager {
                     message_sent_at: timeNow
                 }
                 await storeMessage(db_messageObject);
+                trace.event({ name: "agent.completed", output: response });
                 return;
             }
             // Step 3: Execute the tool
