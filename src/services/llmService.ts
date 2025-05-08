@@ -65,8 +65,8 @@ export async function callLLMOrchestration(userMessage: string, context:AgentCon
             name: "orchestration.call",
             model: defaultModelConfig.model,
             modelParameters: { ...defaultModelConfig },
-            input: userMessage,
-            prompt: compiledChatPrompt
+            input: compiledChatPrompt,
+            prompt: chatPrompt
         });
 
         const msg = await anthropic.messages.create({
