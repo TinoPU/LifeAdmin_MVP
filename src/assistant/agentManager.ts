@@ -121,6 +121,14 @@ export class AgentManager {
                 }
             }
 
+            if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
+                trace.event({
+                    name: "execution.stop",
+                    level: "DEFAULT",
+                    metadata: {reason: "Newer User Message found, response no longer up to date."}
+                })
+                return
+            }
             // Send final response to user (either success confirmation or clarification)
             await sendMessage(messageObject.from, finalResponse);
             //await storeExecutionLog(userId, tool, executionResult, finalResponse);
