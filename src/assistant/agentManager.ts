@@ -9,9 +9,13 @@ import {Message} from "../types/message";
 import {User} from "../types/db";
 import {AgentContext} from "../types/agent";
 import {constructContext} from "../utils/agentUtils";
+import {langfuse} from "../services/langfuse";
 
 export class AgentManager {
     async handleNewRequest(user: User, parent_message_id: string, messageObject: WAIncomingMessage) {
+        const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id });
+        trace.event({ name: "request.received", input: { text: messageObject.text?.body } });
+
         try {
             if (!user.id) {
                 return "No user provided"
@@ -26,12 +30,23 @@ export class AgentManager {
             // Step 1: Orchestration
             const history = await conversationService.getRecentMessages(user.id);
             cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => console.error("Error caching WhatsApp message:", error));
-
             const context: AgentContext = await constructContext(user)
-
             const toolSchema = getToolSchema();
+            const prompt = await langfuse.getPrompt("LLMOrchestration", undefined, {
+                type: "chat",
+            });
+            const gen = trace.generation({
+                name: "orchestration.call",
+                model: "claude-3-7-sonnet-20250219",
+                modelParameters: { temperature: 0.8, max_tokens: 5000 },
+                input: messageObject.text?.body,
+                prompt: prompt
+            });
+
             const llmResponse = await callLLMOrchestration(message,context, history, toolSchema);
             const { tool, parameters, response } = llmResponse;
+            gen.end({ output: llmResponse});
+            trace.event({ name: "orchestration.completed", output: llmResponse });
 
             // Step 2: LLM Response check
             if (tool === "none") {
@@ -49,7 +64,9 @@ export class AgentManager {
                 return;
             }
             // Step 3: Execute the tool
+            const span = trace.span({ name: "tool.execute", input: {tool, parameters, user} });
             const executionResult = await executeTool(tool, parameters, user);
+            span.end({ output: executionResult });
             console.log("Task executed with result: ", executionResult)
 
             //Hot fix -> skip 2nd call on tool success #TODO: implement test and trial
@@ -57,6 +74,7 @@ export class AgentManager {
             const tool_description = getToolByName(tool) || tool
 
             // Step 4: Pass execution result to LLM for confirmation
+            trace.event({ name: "tool.feedback.request", input: executionResult });
             const toolFeedback = await callLLMToolFeedback(message,context.userContext, history, tool_description, parameters, executionResult);
             let {next_action: next_action, response: finalResponse, new_parameters = {}} = toolFeedback;
 
@@ -78,7 +96,9 @@ export class AgentManager {
                         }
                         storeMessage(db_messageObject).catch(() => {})
                     }
+                    const retry_span = trace.span({ name: "retry", input: {tool, new_parameters, user} });
                     const execution_retry_result = await executeTool(tool, new_parameters,  user)
+                    retry_span.end({ output: execution_retry_result })
                     // Get new tool feedback to determine if another retry is needed
                     const toolFeedbackRetry = await callLLMToolFeedback(
                         message,
@@ -92,6 +112,7 @@ export class AgentManager {
                     // If next action is no longer retrying, break the loop
                     if (updated_next_action !== "retry_tool") {
                         finalResponse = updated_response
+                        trace.event({ name: "agent.completed", output: finalResponse });
                         break;
                     }
                     new_parameters = updated_parameters || {};
@@ -111,11 +132,16 @@ export class AgentManager {
                 message_sent_at: timeNow
             }
             await storeMessage(db_messageObject)
+            trace.event({ name: "agent.completed", output: finalResponse });
             return finalResponse
         } catch (error) {
             console.error("Error in AgentManager:", error);
             await sendMessage(messageObject.from, "Ne da bin ich raus");
+            trace.event({ name: "agent.error", output: { message: error } });
             return "Ne da bin ich raus"
+        } finally {
+            // ensure flush in Vercel
+            await langfuse.shutdownAsync();
         }
     }
 }
