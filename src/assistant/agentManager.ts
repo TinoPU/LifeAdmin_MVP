@@ -40,6 +40,15 @@ export class AgentManager {
             const { tool, parameters, response } = llmResponse;
             trace.event({ name: "orchestration.completed", output: llmResponse });
 
+            if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
+                trace.event({
+                    name: "execution.stop",
+                    level: "DEFAULT",
+                    metadata: {reason: "Newer User Message found, response no longer up to date."}
+                })
+                return
+            }
+
             // Step 2: LLM Response check
             if (tool === "none") {
                 // No tool needed, just respond to user
