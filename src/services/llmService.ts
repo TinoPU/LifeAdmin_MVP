@@ -206,5 +206,8 @@ export async function generateReminderMessage(task: Task, user: User, history:an
     } catch (error) {
         trace.event("generateReminderMessage.error", error)
         return
+    } finally {
+        // ensure flush in Vercel
+        await langfuse.shutdownAsync();
     }
 }
