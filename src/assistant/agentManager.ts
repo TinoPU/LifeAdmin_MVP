@@ -9,10 +9,11 @@ import {Message} from "../types/message";
 import {User} from "../types/db";
 import {AgentContext} from "../types/agent";
 import {constructContext} from "../utils/agentUtils";
-import {langfuse} from "../services/langfuse";
+import {langfuse} from "../services/loggingService";
 
 export class AgentManager {
-    async handleNewRequest(user: User, parent_message_id: string, messageObject: WAIncomingMessage) {
+    async handleNewRequest(user: User, parent_message_id: string, messageObject: WAIncomingMessage, logger: any) {
+        logger.info("Handling new Request", messageObject)
         const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id });
         trace.event({ name: "request.received", input: { text: messageObject.text?.body } });
 
@@ -23,7 +24,7 @@ export class AgentManager {
 
             const message = messageObject.text?.body
             if (typeof message !== "string") {
-                console.error("Invalid message: Expected a string but received", message);
+                logger.error("Invalid message: Expected a string but received", message);
                 return; // Stop execution if the message is not a string
             }
 
@@ -69,7 +70,6 @@ export class AgentManager {
             const span = trace.span({ name: "tool.execute", input: {tool, parameters, user} });
             const executionResult = await executeTool(tool, parameters, user);
             span.end({ output: executionResult });
-            console.log("Task executed with result: ", executionResult)
 
             //Hot fix -> skip 2nd call on tool success #TODO: implement test and trial
 

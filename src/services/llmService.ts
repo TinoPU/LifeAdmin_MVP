@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import {ToolResult, ToolSchema} from "../tools/toolRegistry";
 import {Task} from "../types/db";
 import {AgentContext, UserContext} from "../types/agent";
-import {langfuse} from "./langfuse";
+import {langfuse} from "./loggingService";
 import {defaultModelConfig} from "../config/modelConfig";
 
 
