@@ -15,7 +15,7 @@ async function enrichLogs(log: ILogtailLog, user:User): Promise<ILogtailLog> {
 
 export function initLogger(user: User) {
     const logtail = new Logtail(process.env.LOGTAIL_SOURCE!, {
-        endpoint: 'https://s1303935.eu-nbg-2.betterstackdata.com',
+        endpoint: process.env.LOGTAIL_ENDPOINT,
     })
     logtail.use((log) => enrichLogs(log, user));
 
