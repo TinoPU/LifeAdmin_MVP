@@ -13,7 +13,7 @@ import {langfuse} from "../services/loggingService";
 
 export class AgentManager {
     async handleNewRequest(user: User, parent_message_id: string, messageObject: WAIncomingMessage, logger: any) {
-        logger.info("Handling new Request", messageObject)
+        logger.info("Handling new Request", {requestObject: messageObject})
         const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id });
         trace.event({ name: "request.received", input: { text: messageObject.text?.body } });
 
@@ -30,7 +30,7 @@ export class AgentManager {
 
             // Step 1: Orchestration
             const history = await conversationService.getRecentMessages(user.id);
-            cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => console.error("Error caching WhatsApp message:", error));
+            cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => logger.error("Error caching WhatsApp message:", error));
             const context: AgentContext = await constructContext(user)
             const toolSchema = getToolSchema();
             await langfuse.getPrompt("LLMOrchestration", undefined, {
@@ -47,6 +47,7 @@ export class AgentManager {
                     level: "DEFAULT",
                     metadata: {reason: "Newer User Message found, response no longer up to date."}
                 })
+                logger.info("Request handle complete", {traceId: trace.id })
                 return
             }
 
@@ -64,12 +65,13 @@ export class AgentManager {
                 }
                 await storeMessage(db_messageObject);
                 trace.event({ name: "agent.completed", output: response });
+                logger.info("Request handle complete", {traceId: trace.id })
                 return;
             }
             // Step 3: Execute the tool
-            const span = trace.span({ name: "tool.execute", input: {tool, parameters, user} });
+            const executionSpan = trace.span({ name: "tool.execute", input: {tool, parameters, user} });
             const executionResult = await executeTool(tool, parameters, user);
-            span.end({ output: executionResult });
+            executionSpan.end({ output: executionResult });
 
             //Hot fix -> skip 2nd call on tool success #TODO: implement test and trial
 
@@ -77,10 +79,8 @@ export class AgentManager {
 
             // Step 4: Pass execution result to LLM for confirmation
             trace.event({ name: "tool.feedback.request", input: executionResult });
-            const toolFeedback = await callLLMToolFeedback(message,context.userContext, history, tool_description, parameters, executionResult);
+            const toolFeedback = await callLLMToolFeedback(message,context.userContext, history, tool_description, parameters, executionResult, trace);
             let {next_action: next_action, response: finalResponse, new_parameters = {}} = toolFeedback;
-
-            console.log("tool feedback: ", toolFeedback)
 
             // Step 5: Handle tool feedback
             if (next_action === "retry_tool") {
@@ -108,7 +108,8 @@ export class AgentManager {
                         history,
                         tool_description,
                         new_parameters,
-                        execution_retry_result
+                        execution_retry_result,
+                        trace
                     );
                     const { next_action: updated_next_action, new_parameters: updated_parameters, response: updated_response} = toolFeedbackRetry;
                     // If next action is no longer retrying, break the loop
@@ -128,6 +129,7 @@ export class AgentManager {
                     level: "DEFAULT",
                     metadata: {reason: "Newer User Message found, response no longer up to date."}
                 })
+                logger.info("Request handle complete", {traceId: trace.id })
                 return
             }
             // Send final response to user (either success confirmation or clarification)
@@ -143,9 +145,10 @@ export class AgentManager {
             }
             await storeMessage(db_messageObject)
             trace.event({ name: "agent.completed", output: finalResponse });
+            logger.info("Request handle complete", {traceId: trace.id })
             return finalResponse
         } catch (error) {
-            console.error("Error in AgentManager:", error);
+            logger.error("Error in AgentManager:", error);
             await sendMessage(messageObject.from, "Ne da bin ich raus");
             trace.event({ name: "agent.error", output: { message: error } });
             return "Ne da bin ich raus"
