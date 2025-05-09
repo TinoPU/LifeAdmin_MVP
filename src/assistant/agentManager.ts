@@ -78,10 +78,10 @@ export class AgentManager {
             const tool_description = getToolByName(tool) || tool
 
             // Step 4: Pass execution result to LLM for confirmation
-            trace.event({ name: "tool.feedback.request", input: executionResult });
+            trace.event({ name: "ToolFeedback.request", input: executionResult });
             const toolFeedback = await callLLMToolFeedback(message,context.userContext, history, tool_description, parameters, executionResult, trace);
             let {next_action: next_action, response: finalResponse, new_parameters = {}} = toolFeedback;
-
+            trace.event({name: "ToolFeedback.completed", output: toolFeedback})
             // Step 5: Handle tool feedback
             if (next_action === "retry_tool") {
                 let retry_count = 0
