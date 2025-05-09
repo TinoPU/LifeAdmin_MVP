@@ -55,12 +55,19 @@ export async function callLLMOrchestration(userMessage: string, context:AgentCon
         });
 
 
-        const messages: {role: "user" | "assistant", content: string}[] = compiledChatPrompt.map(m => {
-            return {
-                role: (m.role === 'user' ? 'user' : 'assistant'),
-                content: m.content,
-            };
-        });
+        let systemPrompt = "";
+        const messages: { role: "user" | "assistant"; content: string }[] = [];
+
+        for (const m of compiledChatPrompt) {
+            if (m.role === "system") {
+                systemPrompt = m.content;
+            } else {
+                messages.push({
+                    role: m.role === "user" ? "user" : "assistant",
+                    content: m.content,
+                });
+            }
+        }
 
         const gen = trace.generation({
             name: "orchestration.call",
@@ -72,6 +79,7 @@ export async function callLLMOrchestration(userMessage: string, context:AgentCon
 
         const msg = await anthropic.messages.create({
             ...defaultModelConfig,
+            system: systemPrompt,
             messages: messages
         });
         const responseText = msg.content
@@ -104,12 +112,19 @@ export async function callLLMToolFeedback(userMessage: string, userContext:UserC
         });
 
 
-        const messages: {role: "user" | "assistant", content: string}[] = compiledChatPrompt.map(m => {
-            return {
-                role: (m.role === 'user' ? 'user' : 'assistant'),
-                content: m.content,
-            };
-        });
+        let systemPrompt = "";
+        const messages: { role: "user" | "assistant"; content: string }[] = [];
+
+        for (const m of compiledChatPrompt) {
+            if (m.role === "system") {
+                systemPrompt = m.content;
+            } else {
+                messages.push({
+                    role: m.role === "user" ? "user" : "assistant",
+                    content: m.content,
+                });
+            }
+        }
 
 
         const gen = trace.generation({
@@ -123,6 +138,7 @@ export async function callLLMToolFeedback(userMessage: string, userContext:UserC
 
         const msg = await anthropic.messages.create({
             ...defaultModelConfig,
+            system: systemPrompt,
             messages: messages
         });
 
@@ -154,12 +170,19 @@ export async function generateReminderMessage(task: Task, user: User, history:an
             userContext: JSON.stringify(userContext, null, 2),
         });
 
-        const messages: {role: "user" | "assistant", content: string}[] = compiledChatPrompt.map(m => {
-            return {
-                role: (m.role === 'user' ? 'user' : 'assistant'),
-                content: m.content,
-            };
-        });
+        let systemPrompt = "";
+        const messages: { role: "user" | "assistant"; content: string }[] = [];
+
+        for (const m of compiledChatPrompt) {
+            if (m.role === "system") {
+                systemPrompt = m.content;
+            } else {
+                messages.push({
+                    role: m.role === "user" ? "user" : "assistant",
+                    content: m.content,
+                });
+            }
+        }
 
         const gen = trace.generation({
             name: "generateReminderMessage.call",
@@ -171,6 +194,7 @@ export async function generateReminderMessage(task: Task, user: User, history:an
 
         const msg = await anthropic.messages.create({
             ...defaultModelConfig,
+            system: systemPrompt,
             messages: messages
         });
         const response = msg.content
