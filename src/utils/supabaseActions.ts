@@ -116,7 +116,7 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user: Use
 
 export async function storeMessage(message:Message) {
     const {data, error} = await supabase.from("messages").insert([message]).select("id").single();
-    console.log("Data doe queue: ", data, " Message for queue: ", message.message)
+    console.log("Storing Data; Data id queue: ", data, " Message for queue: ", message.message)
     await embeddingQueue.add(`job:${data}`,{"message_id": data, "message": message.message})
     if (error) {
         console.log(error)

@@ -15,25 +15,31 @@ const redis = await connect({
     password: Deno.env.get("REDIS_PW") || undefined,
 });
 
+// utility: sleep for ms
+function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+
 // Example: Process one task from a Redis list (your queue)
 async function processEmbeddingTask() {
-    // Use BLPOP to block and pop a task from the "embedding_tasks" list
-    const task = await redis.blpop("embedding_tasks", 0);
-    if (task) {
-        const [_, value] = task;
-        console.log("value in tas queue is: ", task)// value is your task payload (e.g., JSON string)
-        const { message_id, messageText } = JSON.parse(value);
+    // Try to pop one task (non‐blocking)
+    const payload = await redis.lpop("embedding_tasks");
+    if (!payload) {
+        return;
+    }
+    console.log("popped payload:", payload);
+    const { message_id, messageText } = JSON.parse(payload);
 
-        try {
-            const embedding = await generateEmbedding(messageText);
-            await supabase.from("message_embeddings").insert({
-                message_id: message_id,
-                embedding: embedding,
-            });
-            console.log(`✅ Processed embedding for message ${message_id}`);
-        } catch (error) {
-            console.error(`❌ Embedding failed for ${message_id}:`, error);
-        }
+    try {
+        const embedding = await generateEmbedding(messageText);
+        await supabase.from("message_embeddings").insert({
+            message_id: message_id,
+            embedding: embedding,
+        });
+        console.log(`✅ Processed embedding for message ${message_id}`);
+    } catch (error) {
+        console.error(`❌ Embedding failed for ${message_id}:`, error);
     }
 }
 
@@ -43,6 +49,7 @@ serve(async (_req) => {
     const endTime = Date.now() + 10 * 1000;
     while (Date.now() < endTime) {
         await processEmbeddingTask();
+        await sleep(200);
     }
     return new Response(JSON.stringify({ message: "Queue processed" }), { status: 200 });
 });

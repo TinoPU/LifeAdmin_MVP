@@ -14,6 +14,9 @@ export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
     console.log("user is: ", user)
 
     if (messageObject.text) {
+        if (messageObject.text.body === "active") {
+            return
+        }
         const parent_message_id = await storeWhatsAppMessage(messageObject, user, "user")
         await cacheLatestUserMessage(user,messageObject.text.body)
         const agentManager = new AgentManager();
