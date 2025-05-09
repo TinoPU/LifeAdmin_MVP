@@ -54,7 +54,7 @@ export class AgentManager {
             // Step 2: LLM Response check
             if (tool === "none") {
                 // No tool needed, just respond to user
-                await sendMessage(messageObject.from, response);
+                await sendMessage(messageObject.from, response, logger, "Direct Response - No tools needed");
                 const timeNow = new Date().toISOString();
                 const db_messageObject: Message = {
                     actor: "agent",
@@ -87,7 +87,7 @@ export class AgentManager {
                 let retry_count = 0
                 while (retry_count < 3) {
                     if (retry_count == 1) {
-                        sendMessage(messageObject.from, "wart kurz...").catch(() => {})
+                        sendMessage(messageObject.from, "wart kurz...", logger, "retrying tool").catch(() => {})
                         const timeNow = new Date().toISOString();
                         const db_messageObject: Message = {
                             actor: "agent",
@@ -133,7 +133,7 @@ export class AgentManager {
                 return
             }
             // Send final response to user (either success confirmation or clarification)
-            await sendMessage(messageObject.from, finalResponse);
+            await sendMessage(messageObject.from, finalResponse, logger, "final response");
             //await storeExecutionLog(userId, tool, executionResult, finalResponse);
             const timeNow = new Date().toISOString();
             const db_messageObject: Message = {
@@ -149,7 +149,7 @@ export class AgentManager {
             return finalResponse
         } catch (error) {
             logger.error("Error in AgentManager:", error);
-            await sendMessage(messageObject.from, "Ne da bin ich raus");
+            await sendMessage(messageObject.from, "Ne da bin ich raus", logger, "AgentManager Error");
             trace.event({ name: "agent.error", output: { message: error } });
             return "Ne da bin ich raus"
         } finally {

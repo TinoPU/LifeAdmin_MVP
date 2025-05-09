@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config()
 
-export const sendMessage = async (toPhoneNumber: string, messageBody: string) => {
+export const sendMessage = async (toPhoneNumber: string, messageBody: string, logger: any, source: string) => {
     const BASEURL = process.env.WA_URL; // Update with the correct API version
     const FROM_PHONE_NUMBER_ID = process.env.WA_PHONE_ID; // Replace with your WhatsApp business phone ID
     const ACCESS_TOKEN = process.env.WA_TOKEN; // Store in .env for security
@@ -27,7 +27,7 @@ export const sendMessage = async (toPhoneNumber: string, messageBody: string) =>
             },
         });
 
-        console.log("✅ Message sent:", response.data);
+        logger.info("WA Message sent:", {data: response.data, source:source});
         return response.data;
     } catch (error) {
         console.error("❌ Error sending WhatsApp message:", (error as any).response?.data || (error as any).message);

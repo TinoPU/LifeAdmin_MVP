@@ -37,6 +37,8 @@ export const handleIncomingSupabaseWebhook = async (data: SupabaseDueWebhook) =>
         const user: User = await getUser(data.payload.user_id);
         if (!user || !user.wa_id) throw new Error("User not found");
 
+        const logger = initLogger(user)
+
         let task: Task;
         if (data.payload_type === "reminder") {
             task = await getTask((data.payload as Reminder).task_id);
@@ -52,7 +54,7 @@ export const handleIncomingSupabaseWebhook = async (data: SupabaseDueWebhook) =>
         task.due_date = new Date(new Date(task.due_date).getTime() + (user.user_timezone || 1) * 60 * 60 * 1000).toISOString();
 
         const response_message = await generateReminderMessage(task, user, history) || "irgendwas steht noch an";
-        await sendMessage(user.wa_id, response_message);
+        await sendMessage(user.wa_id, response_message, logger, "Reminder Webhook");
         const timeNow = new Date().toISOString();
         await cacheWhatsappMessage(user, "agent", response_message,timeNow)
     } catch (error) {
