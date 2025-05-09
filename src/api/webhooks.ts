@@ -15,7 +15,7 @@ router.post("/", async (req: Request, res: Response) => {
     }
     catch (err) {
         const body: WAIncomingObject = req.body
-        await baseLogger.error("Couldn't process Data: ",body.entry[0].changes)
+        await baseLogger.warn("Couldn't process Data ",body.entry[0].changes)
         res.status(200).send({ status: "Data received." });
     } finally {
         await baseLogger.flush()
@@ -43,11 +43,11 @@ router.get('/', (req, res) => {
 router.post("/supabase", async (req: Request, res: Response) => {
 
     const body = req.body;
-    res.status(200).send({ status: "Message accepted for processing" });
 
     try {
         await baseLogger.info("supabase Webhook received", {data: body})
         await handleIncomingSupabaseWebhook(body)
+        res.status(200).send({ status: "Message accepted for processing" });
     }
     catch (err) {
         res.status(500).json({ error: (err as Error).message });
