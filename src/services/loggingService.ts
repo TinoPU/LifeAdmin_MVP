@@ -13,11 +13,12 @@ async function enrichLogs(log: ILogtailLog, user:User): Promise<ILogtailLog> {
     };
 }
 
+export const baseLogger = new Logtail(process.env.LOGTAIL_SOURCE!, {
+    endpoint: process.env.LOGTAIL_ENDPOINT,
+})
+
 export function initLogger(user: User) {
-    const logtail = new Logtail(process.env.LOGTAIL_SOURCE!, {
-        endpoint: process.env.LOGTAIL_ENDPOINT,
-    })
-    logtail.use((log) => enrichLogs(log, user));
+    baseLogger.use((log) => enrichLogs(log, user));
 
     function fireAndForget<T extends (...args: any[]) => Promise<any>>(fn: T) {
         return (...args: Parameters<T>) => {
@@ -28,10 +29,10 @@ export function initLogger(user: User) {
         };
     }
     const logger = {
-        debug: fireAndForget(logtail.debug.bind(logtail)),
-        info:  fireAndForget(logtail.info.bind(logtail)),
-        warn:  fireAndForget(logtail.warn.bind(logtail)),
-        error: fireAndForget(logtail.error.bind(logtail)),
+        debug: fireAndForget(baseLogger.debug.bind(baseLogger)),
+        info:  fireAndForget(baseLogger.info.bind(baseLogger)),
+        warn:  fireAndForget(baseLogger.warn.bind(baseLogger)),
+        error: fireAndForget(baseLogger.error.bind(baseLogger)),
     }
     return logger
 }
