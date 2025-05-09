@@ -42,12 +42,14 @@ export async function createTaskTool(
     })
 
     if (!taskResponse) {
+        trace.event({name: "taskTool.error"})
         return Promise.resolve({
             success: false,
             message: "Error: could not execute task, task response is null or undefined."
         })
     }
     if (!taskResponse.success) {
+        trace.event({name: "taskTool.success"})
         return Promise.resolve({
             success: false,
             message: taskResponse.message
@@ -78,19 +80,20 @@ export async function createTaskTool(
                     throw new Error(`Failed to create reminder: ${response.message}`);
                 }
             }
-            trace.event("All reminders created:", responses);
+            trace.event({name: "taskTool.update", metadata: responses});
             return Promise.resolve({
                 success: true,
                 message: "Task and Reminders created successfully"
             })
         }).catch((error) => {
-            trace.event("Error creating reminders:", error.message);
+            trace.event("taskTool.error", error.message);
             return {
                 success: false,
                 message: `Task created successfully, but at least one reminder failed: ${error.message}`
             };
         });
     } else {
+        trace.event("taskTool.success");
         return Promise.resolve({
             success: true,
             message: "Task and Reminders created successfully"
@@ -106,20 +109,26 @@ export async function modifyTaskTool(
         reminder_info ? : string
     }, user: User, trace:any) {
     if (properties.method === "DELETE") {
-        return await deleteTask(properties.task_id)
+        await deleteTask(properties.task_id)
+        trace.event({name: "modifyTaskTool.success", statusMessage: "Deleted task"})
+        return
     }
     if (properties.method === "UPDATE") {
         if (!properties.task) {
+            trace.event({name: "modifyTaskTool.error", statusMessage: "Missing Parameters"})
             return {
                 success: false,
                 message: `No task parameters provided`
             }
         }
         else {
-            return await updateTask(properties.task_id, properties.task)
+            await updateTask(properties.task_id, properties.task)
+            trace.event({name: "modifyTaskTool.success", statusMessage: "Updated task"})
+            return
         }
     }
     else {
+        trace.event({name: "modifyTaskTool.error"})
         return {
             success: false,
             message: `Method not supported: ${properties.method}`
