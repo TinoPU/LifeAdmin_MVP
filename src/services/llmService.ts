@@ -83,13 +83,13 @@ export async function callLLMOrchestration(userMessage: string, context:AgentCon
         gen.end(({ output: responseText}));
         return JSON.parse("{" + responseText);
     } catch (error) {
-        console.error("Error in callLLMOrchestration:", error);
+        trace.event("orchestration.error", error);
         return { tool: "none", parameters: {}, response: "Sorry, ich bin grad AFK" };
     }
 }
 
 
-export async function callLLMToolFeedback(userMessage: string, userContext:UserContext, history: any[], selectedTool: ToolSchema | string, parameters:any[], executionResult:ToolResult) {
+export async function callLLMToolFeedback(userMessage: string, userContext:UserContext, history: any[], selectedTool: ToolSchema | string, parameters:any[], executionResult:ToolResult, trace: any) {
     try {
         const prompt: string = `You are an AI assistant designed to help users by executing tools and providing responses in a conversational context. Your task is to process the given information, determine the appropriate action, and respond in a structured JSON format.
 Here's the information you need to consider:
@@ -153,6 +153,13 @@ Your final output must be a JSON object with the following structure ensuring al
 
 Remember, the output should contain ONLY the JSON object, with no additional text before or after.`
 
+        const gen = trace.generation({
+            name: "LLMToolFeedback.call",
+            model: defaultModelConfig.model,
+            modelParameters: { ...defaultModelConfig },
+            input: prompt,
+        });
+
 
         const msg = await anthropic.messages.create({
             model: "claude-3-7-sonnet-20250219",
@@ -181,10 +188,11 @@ Remember, the output should contain ONLY the JSON object, with no additional tex
             .filter(block => block.type === "text")
             .map(block => block.text)
             .join(" ");
-        console.log("model response: ",responseText)
+
+        gen.end(({ output: responseText}));
         return JSON.parse("{" + responseText);
     } catch (error) {
-        console.error("Error in callLLMToolFeedback:", error);
+        trace.event("LLMToolFeedback.error", error);
         return { next_action: "ask_user", new_parameters: {}, response: "Ich kann mir grad nichts merken" };
     }
 }
