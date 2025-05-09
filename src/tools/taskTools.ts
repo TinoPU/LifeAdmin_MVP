@@ -8,7 +8,7 @@ export async function createTaskTool(
         due_date: string,
         description ? : string,
         reminder_array? : number[]
-    }, user: User) {
+    }, user: User, trace:any) {
     const missingFields = [];
 
     if (!properties.name) missingFields.push("name");
@@ -78,13 +78,13 @@ export async function createTaskTool(
                     throw new Error(`Failed to create reminder: ${response.message}`);
                 }
             }
-            console.log("All reminders created:", responses);
+            trace.event("All reminders created:", responses);
             return Promise.resolve({
                 success: true,
                 message: "Task and Reminders created successfully"
             })
         }).catch((error) => {
-            console.error("Error creating reminders:", error.message);
+            trace.event("Error creating reminders:", error.message);
             return {
                 success: false,
                 message: `Task created successfully, but at least one reminder failed: ${error.message}`
@@ -104,7 +104,7 @@ export async function modifyTaskTool(
         method: string,
         task ? : Task,
         reminder_info ? : string
-    }, user: User) {
+    }, user: User, trace:any) {
     if (properties.method === "DELETE") {
         return await deleteTask(properties.task_id)
     }

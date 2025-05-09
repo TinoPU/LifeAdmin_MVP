@@ -2,7 +2,7 @@ import {createTaskTool, modifyTaskTool} from "./taskTools";
 import {User} from "../types/db";
 import {askPerplexity} from "./perplexityTools";
 
-export type ToolFunction = (properties: any, user: User) => Promise<{
+export type ToolFunction = (properties: any, user: User, trace: any) => Promise<{
     success: boolean;
     message: string;
     updated_parameters?: any
@@ -138,14 +138,14 @@ export const toolRegistry: Record<string, {
 /**
  * Executes a tool dynamically based on its name.
  */
-export async function executeTool(toolName: string, properties: any, user:User) {
+export async function executeTool(toolName: string, properties: any, user:User, trace:any) {
     const tool = toolRegistry[toolName];
 
     if (!tool) {
         return { success: false, message: `Tool '${toolName}' not found.` };
     }
 
-    return await tool.function(properties, user);
+    return await tool.function(properties, user, trace);
 }
 
 /**

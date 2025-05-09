@@ -70,7 +70,7 @@ export class AgentManager {
             }
             // Step 3: Execute the tool
             const executionSpan = trace.span({ name: "tool.execute", input: {tool, parameters, user} });
-            const executionResult = await executeTool(tool, parameters, user);
+            const executionResult = await executeTool(tool, parameters, user, trace);
             executionSpan.end({ output: executionResult });
 
             //Hot fix -> skip 2nd call on tool success #TODO: implement test and trial
@@ -99,7 +99,7 @@ export class AgentManager {
                         storeMessage(db_messageObject).catch(() => {})
                     }
                     const retry_span = trace.span({ name: "retry", input: {tool, new_parameters, user} });
-                    const execution_retry_result = await executeTool(tool, new_parameters,  user)
+                    const execution_retry_result = await executeTool(tool, new_parameters,  user, trace)
                     retry_span.end({ output: execution_retry_result })
                     // Get new tool feedback to determine if another retry is needed
                     const toolFeedbackRetry = await callLLMToolFeedback(

@@ -3,6 +3,7 @@
 
 // Retrieve the Perplexity API key from environment variables
 import {User} from "../types/db";
+import {defaultModelConfig} from "../config/modelConfig";
 
 const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
 if (!PERPLEXITY_API_KEY) {
@@ -23,7 +24,7 @@ export async function askPerplexity(
     properties: {
         messages: Array<{ role: string; content: string }>,
         model?: string
-    }, user:User) {
+    }, user:User, trace: any) {
     // Construct the API endpoint URL and request body
     const url = new URL("https://api.perplexity.ai/chat/completions");
     const body = {
@@ -35,9 +36,13 @@ export async function askPerplexity(
         // https://docs.perplexity.ai/api-reference/chat-completions
     };
 
-    console.log("preparing search request")
-    console.log("url: ", url)
-    console.log("body: ", body)
+    const gen = trace.generation({
+        name: "perplexity.call",
+        model: "sonar-pro",
+        modelParameters: { max_tokens: 200 },
+        input: properties.messages,
+    });
+
 
     let response;
     try {
@@ -50,6 +55,7 @@ export async function askPerplexity(
             body: JSON.stringify(body),
         });
     } catch (error) {
+        trace.event("perplexity.error", error)
         throw new Error(`Network error while calling Perplexity API: ${error}`);
     }
 
@@ -59,7 +65,7 @@ export async function askPerplexity(
         let errorText;
         try {
             errorText = await response.text();
-            console.log(errorText)
+            trace.event("perplexity.error", errorText)
         } catch (parseError) {
             errorText = "Unable to parse error response";
         }
@@ -73,8 +79,8 @@ export async function askPerplexity(
     let data;
     try {
         data = await response.json();
-        console.log(data)
     } catch (jsonError) {
+        trace.event("perplexity.error", jsonError)
         throw new Error(`Failed to parse JSON response from Perplexity API: ${jsonError}`);
     }
 
@@ -89,6 +95,7 @@ export async function askPerplexity(
             messageContent += `[${index + 1}] ${citation}\n`;
         });
     }
+    gen.end(({ output: messageContent}));
 
     return Promise.resolve({
         success: true,
