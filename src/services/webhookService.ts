@@ -13,6 +13,7 @@ export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
     const messageObject = payload.entry[0].changes[0].value.messages[0]
     const user: User = await fetchUserId(payload.entry[0].changes[0].value.contacts[0])
     const logger = initLogger(user)
+    logger.info("WA Webhook received", messageObject)
 
     if (messageObject.text) {
         if (messageObject.text.body === "active") {
