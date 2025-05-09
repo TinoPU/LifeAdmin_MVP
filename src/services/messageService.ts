@@ -27,7 +27,7 @@ export const sendMessage = async (toPhoneNumber: string, messageBody: string, lo
             },
         });
 
-        logger.info("WA Message sent:", {data: response.data, source:source});
+        logger.info("WA Message sent", {messageBody: messageBody, responseData: response.data, source:source});
         return response.data;
     } catch (error) {
         console.error("❌ Error sending WhatsApp message:", (error as any).response?.data || (error as any).message);
