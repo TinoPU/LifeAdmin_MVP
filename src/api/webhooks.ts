@@ -10,8 +10,8 @@ const router = express.Router();
 router.post("/", async (req: Request, res: Response) => {
     try {
         const body: WAIncomingObject = req.body;
-        res.status(200).send({ status: "Message accepted for processing" });
         await handleIncomingWAWebhook(body)
+        res.status(200).send({ status: "Message accepted for processing" });
     }
     catch (err) {
         const body: WAIncomingObject = req.body
