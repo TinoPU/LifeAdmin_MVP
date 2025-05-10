@@ -5,6 +5,7 @@ import {createNewUser} from "./supabaseActions";
 import {User} from "../types/db";
 import {UserContext} from "../types/agent";
 import {formatDate} from "./transformationUtils";
+import {baseLogger} from "../services/loggingService";
 
 
 export async function fetchUserId(contact: Contact) {
@@ -14,8 +15,7 @@ export async function fetchUserId(contact: Contact) {
     // 1. Check if user_id is in Redis cache
     const cachedUserId = await redisClient.get(redisKey);
     if (cachedUserId) {
-        console.log("Cache hit! Found user ID in Redis.");
-        console.log(cachedUserId)
+        await baseLogger.info("User Id found in cache", {cachedUserId: cachedUserId})
         return JSON.parse(cachedUserId) as User; // Return cached value immediately
     }
 
