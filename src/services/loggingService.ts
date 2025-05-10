@@ -43,8 +43,8 @@ export function initLogger(user: User) {
 
 export async function drainLogsAndFlush() {
     // wait for every pending log to enqueue
-    console.log("Pending Logs: ", pendingLogs)
     await Promise.all(Array.from(pendingLogs));
+    await baseLogger.log("Execution ended")
     // then flush the buffer
     await baseLogger.flush();
 }
