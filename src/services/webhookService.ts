@@ -7,7 +7,7 @@ import {Reminder, SupabaseDueWebhook, Task, User} from "../types/db";
 import {generateReminderMessage} from "./llmService";
 import sendMessage from "./messageService";
 import conversationService from "./conversationService";
-import {initLogger} from "./loggingService";
+import {baseLogger, initLogger} from "./loggingService";
 
 export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
     const messageObject = payload.entry[0].changes[0].value.messages[0]
@@ -17,7 +17,7 @@ export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
 
     if (messageObject.text) {
         if (messageObject.text.body === "active") {
-            logger.info("active message received. Flow skipped.")
+            await baseLogger.info("active message received. flow skipped.", {user: user})
             return
         }
         const parent_message_id = await storeWhatsAppMessage(messageObject, user, "user")
