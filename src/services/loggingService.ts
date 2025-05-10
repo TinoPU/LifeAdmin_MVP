@@ -20,19 +20,21 @@ export const baseLogger = new Logtail(process.env.LOGTAIL_SOURCE!, {
 export function initLogger(user: User) {
     baseLogger.use((log) => enrichLogs(log, user));
 
-    function fireAndForget<T extends (...args: any[]) => Promise<any>>(fn: T) {
-        return (...args: Parameters<T>) => {
-            // kick off the promise, but don't force callers to await
-            fn(...args).catch((err) => {
-                // optionally: console.error("Logtail failed:", err)
-            });
-        };
-    }
+    // explicitly marking each Promise as "fire-and-forget"
     const logger = {
-        debug: fireAndForget(baseLogger.debug.bind(baseLogger)),
-        info:  fireAndForget(baseLogger.info.bind(baseLogger)),
-        warn:  fireAndForget(baseLogger.warn.bind(baseLogger)),
-        error: fireAndForget(baseLogger.error.bind(baseLogger)),
-    }
+        debug: (...args: Parameters<Logtail["debug"]>) => {
+            void baseLogger.debug(...args);
+        },
+        info: (...args: Parameters<Logtail["info"]>) => {
+            void baseLogger.info(...args);
+        },
+        warn: (...args: Parameters<Logtail["warn"]>) => {
+            void baseLogger.warn(...args);
+        },
+        error: (...args: Parameters<Logtail["error"]>) => {
+            void baseLogger.error(...args);
+        },
+    };
+
     return logger
 }
