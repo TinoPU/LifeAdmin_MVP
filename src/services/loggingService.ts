@@ -44,7 +44,7 @@ export function initLogger(user: User) {
 export async function drainLogsAndFlush() {
     // wait for every pending log to enqueue
     await Promise.all(Array.from(pendingLogs));
-    await baseLogger.log("Execution ended")
+    await new Promise(r => setTimeout(r, 50));
     // then flush the buffer
     await baseLogger.flush();
 }
