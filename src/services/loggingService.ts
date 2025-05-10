@@ -17,24 +17,33 @@ export const baseLogger = new Logtail(process.env.LOGTAIL_SOURCE!, {
     endpoint: process.env.LOGTAIL_ENDPOINT,
 })
 
+const pendingLogs = new Set<Promise<any>>();
+
+
+function makeVoidAndTrack<T extends (...args: any[]) => Promise<any>>(fn: T) {
+    return (...args: Parameters<T>): void => {
+        const p = fn(...args).catch(() => { /* swallow any log errors */ });
+        pendingLogs.add(p);
+        // remove once settled
+        p.finally(() => pendingLogs.delete(p));
+    };
+}
+
 export function initLogger(user: User) {
     baseLogger.use((log) => enrichLogs(log, user));
 
-    // explicitly marking each Promise as "fire-and-forget"
-    const logger = {
-        debug: (...args: Parameters<Logtail["debug"]>) => {
-            void baseLogger.debug(...args);
-        },
-        info: (...args: Parameters<Logtail["info"]>) => {
-            void baseLogger.info(...args);
-        },
-        warn: (...args: Parameters<Logtail["warn"]>) => {
-            void baseLogger.warn(...args);
-        },
-        error: (...args: Parameters<Logtail["error"]>) => {
-            void baseLogger.error(...args);
-        },
+    return {
+        debug: makeVoidAndTrack(baseLogger.debug.bind(baseLogger)),
+        info:  makeVoidAndTrack(baseLogger.info.bind(baseLogger)),
+        warn:  makeVoidAndTrack(baseLogger.warn.bind(baseLogger)),
+        error: makeVoidAndTrack(baseLogger.error.bind(baseLogger)),
     };
+}
 
-    return logger
+
+export async function drainLogsAndFlush() {
+    // wait for every pending log to enqueue
+    await Promise.all(Array.from(pendingLogs));
+    // then flush the buffer
+    await baseLogger.flush();
 }

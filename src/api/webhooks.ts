@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import {handleIncomingSupabaseWebhook, handleIncomingWAWebhook} from "../services/webhookService";
 import {WAIncomingObject} from "../types/incomingWAObject/WAIncomingObject";
-import {baseLogger} from "../services/loggingService";
+import {baseLogger, drainLogsAndFlush} from "../services/loggingService";
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.post("/", async (req: Request, res: Response) => {
         await baseLogger.warn("Couldn't process Data ",body.entry[0].changes)
         res.status(200).send({ status: "Data received." });
     } finally {
-        await baseLogger.flush()
+        await drainLogsAndFlush()
     }
 });
 
