@@ -25,7 +25,7 @@ export class AgentManager {
             const message = messageObject.text?.body
             if (typeof message !== "string") {
                 logger.error("Invalid message: Expected a string but received", message);
-                return; // Stop execution if the message is not a string
+                return "Invalid Message type received"; // Stop execution if the message is not a string
             }
 
             // Step 1: Orchestration
@@ -66,7 +66,7 @@ export class AgentManager {
                 await storeMessage(db_messageObject);
                 trace.event({ name: "agent.completed", output: response });
                 logger.info("Request handle complete", {traceId: trace.id })
-                return;
+                return response;
             }
             // Step 3: Execute the tool
             const executionSpan = trace.span({ name: "tool.execute", input: {tool, parameters, user} });
