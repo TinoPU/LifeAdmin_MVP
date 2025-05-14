@@ -1,6 +1,7 @@
 import { createClient } from 'redis';
 import { Queue } from "bullmq";
 import dotenv from "dotenv";
+import {baseLogger} from "../services/loggingService";
 
 dotenv.config()
 
@@ -14,6 +15,7 @@ redisClient.on('error', (err) => console.error('Redis Client Error', err));
 (async () => {
     try {
         await redisClient.connect();
+        await baseLogger.info("Redis connected", {keys: redisClient.keys})
         // await redisClient.flushAll()
         // console.log("db flushed")
 
