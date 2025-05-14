@@ -1,5 +1,4 @@
 import { createClient } from 'redis';
-import { Queue } from "bullmq";
 import dotenv from "dotenv";
 import {baseLogger} from "../services/loggingService";
 
@@ -29,7 +28,6 @@ redisClient.on('error', (err) => baseLogger.error('Redis Client Error', {error: 
         await baseLogger.error('Redis connection error:', {error: err});
     }
 })();
-export const embeddingQueue = new Queue("embedding_tasks", { connection: {url: process.env.REDIS_REDIS_URL|| "" }});
 
 
 // Handle graceful shutdown

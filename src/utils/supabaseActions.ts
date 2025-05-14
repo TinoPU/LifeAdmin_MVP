@@ -4,8 +4,8 @@ import {Contact} from "../types/incomingWAObject/WAIncomingValueObject";
 import {Message, wa_metadata} from "../types/message";
 import {Reminder, Task, User} from "../types/db";
 import {getTzFromPhone} from "./transformationUtils";
-import {embeddingQueue} from "../database/redis";
 import {baseLogger} from "../services/loggingService";
+import redisClient from "../database/redis";
 
 //////Message Methods
 
@@ -118,7 +118,11 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user: Use
 export async function storeMessage(message:Message) {
     const {data, error} = await supabase.from("messages").insert([message]).select("id").single();
     await baseLogger.info("Queueing Message for Embedding", {data: data, messageBody: message.message})
-    await embeddingQueue.add(`job:${data}`,{"message_id": data, "message": message.message})
+    if (data) {
+    await redisClient.lPush("embedding_tasks", JSON.stringify({
+        message_id: data.id,
+        messageText: message.message,
+    }))}
     if (error) {
         await baseLogger.error("Message storing failed", {error: error})
         return {
