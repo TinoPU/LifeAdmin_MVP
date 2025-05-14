@@ -7,8 +7,8 @@ import {WAIncomingMessage} from "../types/incomingWAObject/WAIncomingMessage";
 import {cacheWhatsappMessage} from "../utils/redisActions";
 import {Message, Session} from "../types/message";
 import {User} from "../types/db";
-import {AgentContext} from "../types/agent";
-import {constructContext} from "../utils/agentUtils";
+import {AgentContext, ExecutionContext} from "../types/agent";
+import {constructContext, constructExecutionContext} from "../utils/agentUtils";
 import {langfuse} from "../services/loggingService";
 import {getSession} from "../utils/chatUtils";
 
@@ -17,6 +17,8 @@ export class AgentManager {
         logger.info("Handling new Request", {requestObject: messageObject})
         const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id });
         trace.event({ name: "request.received", input: { text: messageObject.text?.body } });
+        const executionContext: ExecutionContext = constructExecutionContext()
+
 
         try {
             if (!user.id) {
@@ -31,6 +33,8 @@ export class AgentManager {
 
             // Step 1: Orchestration
             const session: Session = await getSession(user)
+            executionContext.user_id = user.id
+            executionContext.session_id = session.id
             const history = await conversationService.getRecentMessages(user.id);
             cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => logger.error("Error caching WhatsApp message:", error));
             const context: AgentContext = await constructContext(user)

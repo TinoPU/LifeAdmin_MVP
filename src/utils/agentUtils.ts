@@ -1,7 +1,8 @@
-import {AgentContext} from "../types/agent";
+import {AgentContext, ExecutionContext} from "../types/agent";
 import {constructUserContext} from "./userUtils";
 import {User} from "../types/db";
 import {constructTaskContext} from "./taskUtils";
+import {uuid} from "@supabase/supabase-js/dist/main/lib/helpers";
 
 
 export async function constructContext(user:User) {
@@ -14,4 +15,14 @@ export async function constructContext(user:User) {
         taskContext: taskContext
     }
     return context
+}
+
+export function constructExecutionContext(): ExecutionContext {
+    return {
+        id: uuid(),
+        agent_messages: [],
+        execution_start: new Date().toISOString(),
+        status: "Started",
+        iteration_count: 0,
+    }
 }

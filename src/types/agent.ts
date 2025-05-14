@@ -1,4 +1,4 @@
-import {UUID} from "./db";
+import {UUID} from "./message";
 
 export interface UserContext {
     name?: string,
