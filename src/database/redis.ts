@@ -9,18 +9,20 @@ const redisClient = createClient({
     url: process.env.REDIS_REDIS_URL, // Make sure this is set in .env
 });
 
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
+redisClient.on('error', (err) => baseLogger.error('Redis Client Error', {error: err}));
 
 // Connect Redis once when the server starts
 (async () => {
     try {
         await redisClient.connect();
-        await baseLogger.info("Redis connected", {keys: redisClient.keys})
+        await baseLogger.info("Redis connected", {keys: redisClient.keys('*')})
+        const clientList: string = await redisClient.sendCommand(['CLIENT', 'LIST']);
+        await baseLogger.info('👥 Redis clients:\n', {clients:clientList});
         // await redisClient.flushAll()
         // console.log("db flushed")
 
     } catch (err) {
-        console.error('❌ Redis connection error:', err);
+        await baseLogger.error('Redis connection error:', {error: err});
     }
 })();
 export const embeddingQueue = new Queue("embedding_tasks", { connection: {url: process.env.REDIS_REDIS_URL|| "" }});
@@ -29,7 +31,7 @@ export const embeddingQueue = new Queue("embedding_tasks", { connection: {url: p
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
     await redisClient.quit();
-    console.log('🔴 Redis disconnected');
+    await baseLogger.info('Redis disconnected');
     process.exit(0);
 });
 

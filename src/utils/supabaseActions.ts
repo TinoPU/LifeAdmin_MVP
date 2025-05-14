@@ -117,7 +117,7 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user: Use
 
 export async function storeMessage(message:Message) {
     const {data, error} = await supabase.from("messages").insert([message]).select("id").single();
-    await baseLogger.info("Queueing Message for Embedding", {data: data, message: message.message})
+    await baseLogger.info("Queueing Message for Embedding", {data: data, messageBody: message.message})
     await embeddingQueue.add(`job:${data}`,{"message_id": data, "message": message.message})
     if (error) {
         await baseLogger.error("Message storing failed", {error: error})
