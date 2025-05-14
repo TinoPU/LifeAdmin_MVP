@@ -9,6 +9,7 @@ export async function getSession(user: User): Promise<Session> {
     const redisKey = `session:${user.id}`
     const cachedSession = await redisClient.get(redisKey);
     if (cachedSession) {
+        await redisClient.expire(redisKey, 86400)
         return JSON.parse(cachedSession)
     } else {
         const sessionInfo = {
@@ -19,8 +20,8 @@ export async function getSession(user: User): Promise<Session> {
 
         }
         const {data, error} = await supabase.from("sessions").insert(sessionInfo).select('*').single()
-        await redisClient.lPush(redisKey, JSON.stringify(data))
-        await redisClient.lTrim(redisKey, 0, 0)
+        await redisClient.set(redisKey, JSON.stringify(data))
+        await redisClient.expire(redisKey, 86400)
         if (error) {
            await baseLogger.error("Error creating session", {error: error})
         }
