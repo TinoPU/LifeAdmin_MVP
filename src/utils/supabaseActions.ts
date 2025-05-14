@@ -71,7 +71,7 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user: Use
             .insert([messageData])
             .select("id").single()
         if (msgError) {
-            console.error("Insert error:", msgError);
+            await baseLogger.error("Message insertion error", {error: msgError});
         }
 
 
@@ -108,6 +108,10 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user: Use
         }
 
         console.log(`✅ Successfully stored WA message ${message_id}`);
+        await redisClient.lPush("embedding_tasks", JSON.stringify({
+                message_id: message_id,
+                messageText: messageData.message
+            }))
         return message_id
     } catch (error) {
         console.error("❌ Error storing WhatsApp message:", error);
