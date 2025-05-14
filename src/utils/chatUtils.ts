@@ -19,7 +19,7 @@ export async function getSession(user: User): Promise<Session> {
 
         }
         const {data, error} = await supabase.from("sessions").insert(sessionInfo).select('*').single()
-        await redisClient.lPush(redisKey, data)
+        await redisClient.lPush(redisKey, JSON.stringify(data))
         await redisClient.lTrim(redisKey, 0, 0)
         if (error) {
            await baseLogger.error("Error creating session", {error: error})
