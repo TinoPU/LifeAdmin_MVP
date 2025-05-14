@@ -5,6 +5,7 @@ import {Message, wa_metadata} from "../types/message";
 import {Reminder, Task, User} from "../types/db";
 import {getTzFromPhone} from "./transformationUtils";
 import {embeddingQueue} from "../database/redis";
+import {baseLogger} from "../services/loggingService";
 
 //////Message Methods
 
@@ -116,10 +117,10 @@ export async function storeWhatsAppMessage(message: WAIncomingMessage, user: Use
 
 export async function storeMessage(message:Message) {
     const {data, error} = await supabase.from("messages").insert([message]).select("id").single();
-    console.log("Storing Data; Data id queue: ", data, " Message for queue: ", message.message)
+    await baseLogger.info("Queueing Message for Embedding", {data: data, message: message.message})
     await embeddingQueue.add(`job:${data}`,{"message_id": data, "message": message.message})
     if (error) {
-        console.log(error)
+        await baseLogger.error("Message storing failed", {error: error})
         return {
             success: false,
             message: `Error: Message store failed with error: ${error}`,
@@ -146,7 +147,7 @@ export async function createNewUser(contact: Contact) {
     const {data, error} = await supabase.from("users").insert([user]).select("*").single();
 
     if (error) {
-        console.log(error)
+        await baseLogger.error("User creation failed", {error: error})
         throw new Error("Failed to create new user");
     }
 
@@ -161,7 +162,7 @@ export async function getUser(user_id: string) {
         .single(); // Expect a single result
 
     if (error) {
-        console.error("Error fetching user:", error);
+        await baseLogger.error("Error fetching user", {error: error});
         return null; // Handle error appropriately
     }
 
@@ -176,7 +177,7 @@ export async function createTask(task: Task) {
     const {data, error} = await supabase.from("tasks").insert(task).select("id").single()
 
     if (error) {
-        console.log(error)
+        await baseLogger.error("Task creation failed", {error: error, task: task})
         return {
             success: false,
             message: `Error: task creation failed with error: ${error}`,
@@ -198,7 +199,7 @@ export async function getTask(task_id: string) {
         .single(); // Expect a single result
 
     if (error) {
-        console.error("Error fetching task:", error);
+        await baseLogger.error("Error fetching task", {error: error, task_id: task_id});
         return null; // Handle error appropriately
     }
 
