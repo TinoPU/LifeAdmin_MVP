@@ -25,6 +25,8 @@ function sleep(ms: number) {
 async function processEmbeddingTask() {
     // Try to pop one task (non‐blocking)
     const payload = await redis.lpop("embedding_tasks");
+    const keys = await redis.keys('*')
+    console.log("keys: ", keys)
     if (!payload) {
         return;
     }

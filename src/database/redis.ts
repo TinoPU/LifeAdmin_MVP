@@ -15,7 +15,11 @@ redisClient.on('error', (err) => baseLogger.error('Redis Client Error', {error: 
 (async () => {
     try {
         await redisClient.connect();
-        await baseLogger.info("Redis connected", {keys: redisClient.keys('*')})
+        const foundKeys = [];
+        for await (const key of redisClient.scanIterator()) {
+            foundKeys.push(key);
+        }
+        await baseLogger.info("Redis connected", {keys: foundKeys})
         const clientList: string = await redisClient.sendCommand(['CLIENT', 'LIST']);
         await baseLogger.info('👥 Redis clients:\n', {clients:clientList});
         // await redisClient.flushAll()
