@@ -15,9 +15,12 @@ import {getSession} from "../utils/chatUtils";
 export class AgentManager {
     async handleNewRequest(user: User, parent_message_id: string, messageObject: WAIncomingMessage, logger: any) {
         logger.info("Handling new Request", {requestObject: messageObject})
-        const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id });
-        trace.event({ name: "request.received", input: { text: messageObject.text?.body } });
+        const session: Session = await getSession(user)
         const executionContext: ExecutionContext = constructExecutionContext()
+        executionContext.user_id = user.id
+        executionContext.session_id = session.id
+        const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id, sessionId: session.id.toString() });
+        trace.event({ name: "request.received", input: { text: messageObject.text?.body } });
 
 
         try {
@@ -32,9 +35,6 @@ export class AgentManager {
             }
 
             // Step 1: Orchestration
-            const session: Session = await getSession(user)
-            executionContext.user_id = user.id
-            executionContext.session_id = session.id
             const history = await conversationService.getRecentMessages(user.id);
             cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => logger.error("Error caching WhatsApp message:", error));
             const context: AgentContext = await constructContext(user)
