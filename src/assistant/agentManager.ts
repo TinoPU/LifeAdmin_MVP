@@ -25,7 +25,7 @@ export class AgentManager {
 
             const message = messageObject.text?.body
             if (typeof message !== "string") {
-                logger.error("Invalid message: Expected a string but received", message);
+                logger.error("Invalid message: Expected a string but received", {message: message});
                 return "Invalid Message type received"; // Stop execution if the message is not a string
             }
 
@@ -153,7 +153,7 @@ export class AgentManager {
             logger.info("Request handle complete", {traceId: trace.id })
             return finalResponse
         } catch (error) {
-            logger.error("Error in AgentManager:", error);
+            logger.error("Error in AgentManager", {error: error});
             await sendMessage(messageObject.from, "Ne da bin ich raus", logger, "AgentManager Error");
             trace.event({ name: "agent.error", output: { message: error } });
             return "Ne da bin ich raus"
