@@ -157,3 +157,15 @@ export interface Message {
     wa_id?: string;
     type?: string;
 }
+
+export interface Session {
+    id: UUID,
+    user_id: UUID,
+    session_start: string,
+    session_end?: string,
+    status?: string,
+    topic?: string,
+    centroid_vector?: number[],
+    last_message_id?: UUID,
+    message_count?: number,
+}

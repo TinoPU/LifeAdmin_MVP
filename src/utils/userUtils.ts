@@ -8,7 +8,7 @@ import {formatDate} from "./transformationUtils";
 import {baseLogger} from "../services/loggingService";
 
 
-export async function fetchUserId(contact: Contact) {
+export async function fetchUser(contact: Contact) {
     const wa_user_id = contact.wa_id
     const redisKey = `user:${wa_user_id}`;
 

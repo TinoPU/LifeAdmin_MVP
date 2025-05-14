@@ -1,7 +1,7 @@
 import { WAIncomingMessage } from "../types/incomingWAObject/WAIncomingMessage";
 import supabase from "../database/supabaseClient";
 import {Contact} from "../types/incomingWAObject/WAIncomingValueObject";
-import {Message, wa_metadata} from "../types/message";
+import {Message, Session, wa_metadata} from "../types/message";
 import {Reminder, Task, User} from "../types/db";
 import {getTzFromPhone} from "./transformationUtils";
 import {baseLogger} from "../services/loggingService";
@@ -289,5 +289,22 @@ export async function createReminder (reminder: Reminder) {
         success: true,
         message: `Reminder created Successfully: ${data.id}`,
         id: data.id
+    };
+}
+
+export async function updateSession (session:Session) {
+
+    const {data, error} = await supabase.from("sessions").update(session).eq("id", session.id);
+
+    if (error) {
+        await baseLogger.error("Error updating Session", {error: error})
+        return {
+            success: false,
+            message: `Error: Message store failed with error: ${error}`,
+        };
+    }
+    return {
+        success: true,
+        message: `Session updated Successfully`,
     };
 }

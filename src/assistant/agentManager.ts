@@ -5,11 +5,12 @@ import { storeMessage } from "../utils/supabaseActions";
 import { sendMessage } from "../services/messageService";
 import {WAIncomingMessage} from "../types/incomingWAObject/WAIncomingMessage";
 import {cacheWhatsappMessage} from "../utils/redisActions";
-import {Message} from "../types/message";
+import {Message, Session} from "../types/message";
 import {User} from "../types/db";
 import {AgentContext} from "../types/agent";
 import {constructContext} from "../utils/agentUtils";
 import {langfuse} from "../services/loggingService";
+import {getSession} from "../utils/chatUtils";
 
 export class AgentManager {
     async handleNewRequest(user: User, parent_message_id: string, messageObject: WAIncomingMessage, logger: any) {
@@ -29,6 +30,7 @@ export class AgentManager {
             }
 
             // Step 1: Orchestration
+            const session: Session = await getSession(user)
             const history = await conversationService.getRecentMessages(user.id);
             cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => logger.error("Error caching WhatsApp message:", error));
             const context: AgentContext = await constructContext(user)
@@ -61,7 +63,8 @@ export class AgentManager {
                     message: response,
                     user_id: user.id,
                     parent_message_id: parent_message_id,
-                    message_sent_at: timeNow
+                    message_sent_at: timeNow,
+                    session_id: session.id
                 }
                 await storeMessage(db_messageObject);
                 trace.event({ name: "agent.completed", output: response });
@@ -94,7 +97,8 @@ export class AgentManager {
                             message: "wart kurz...",
                             user_id: user.id,
                             parent_message_id: parent_message_id,
-                            message_sent_at: timeNow
+                            message_sent_at: timeNow,
+                            session_id: session.id
                         }
                         storeMessage(db_messageObject).catch(() => {})
                     }
@@ -141,7 +145,8 @@ export class AgentManager {
                 message: finalResponse,
                 user_id: user.id,
                 parent_message_id: parent_message_id,
-                message_sent_at: timeNow
+                message_sent_at: timeNow,
+                session_id: session.id
             }
             await storeMessage(db_messageObject)
             trace.event({ name: "agent.completed", output: finalResponse });
