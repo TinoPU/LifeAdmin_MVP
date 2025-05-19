@@ -50,7 +50,7 @@ export async function askPerplexity(
             body: JSON.stringify(body),
         });
     } catch (error) {
-        trace.event("perplexity.error", error)
+        trace.event({name:"perplexity.error", level:"ERROR", statusMessage: error})
         throw new Error(`Network error while calling Perplexity API: ${error}`);
     }
 
@@ -60,7 +60,7 @@ export async function askPerplexity(
         let errorText;
         try {
             errorText = await response.text();
-            trace.event("perplexity.error", errorText)
+            trace.event({name:"perplexity.error", level:"ERROR", statusMessage: errorText})
         } catch (parseError) {
             errorText = "Unable to parse error response";
         }
@@ -75,7 +75,7 @@ export async function askPerplexity(
     try {
         data = await response.json();
     } catch (jsonError) {
-        trace.event("perplexity.error", jsonError)
+        trace.event({name:"perplexity.error", level:"ERROR", statusMessage: jsonError})
         throw new Error(`Failed to parse JSON response from Perplexity API: ${jsonError}`);
     }
 
