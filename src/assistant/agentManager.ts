@@ -19,7 +19,7 @@ export class AgentManager {
         logger.info("Handling new Request", {requestObject: messageObject})
         const session: Session = await getSession(user)
         const executionContext: ExecutionContext = constructExecutionContext()
-        const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id, sessionId: session.id.toString() });
+        const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id, sessionId: session.id.toString(), input: messageObject.text?.body });
         trace.event({ name: "request.received", input: { text: messageObject.text?.body } });
 
         try {
@@ -56,7 +56,7 @@ export class AgentManager {
             for (let agentChoice in orchestrator_response.agents ){
                 const agentFn = agentFunctionMap[agentChoice];
                 if (!agentFn) {
-                    logger.warn(`No function found for agent: ${agentChoice}`);
+                    logger.warn(`No function found for agent: ${JSON.stringify(agentChoice)}`, {available_agents: Object.keys(agentFunctionMap).map(k => JSON.stringify(k))})
                     continue;
                 }
                 executionContext.agentStatus[agentChoice] = { status: "pending" };
@@ -64,7 +64,8 @@ export class AgentManager {
                 if (agentChoice === responseAgentCard.name) {
                     continue; // defer Response Agent
                 }
-                const agentPromise = agentFn(message, executionContext, history, trace)
+                const agentprompt = orchestrator_response.agents[agentChoice].task;
+                const agentPromise = agentFn(message, executionContext, history, agentprompt, trace)
                     .then((result) => {
                         executionContext.agentStatus[agentChoice] = { status: "success", result };
                     })
@@ -104,6 +105,7 @@ export class AgentManager {
                     }
                     await sendMessage(messageObject.from, response.response, logger, "Response Agent");
                     const timeNow = new Date().toISOString();
+                    await cacheWhatsappMessage(user, "agent", response.response, timeNow)
                     const db_messageObject: Message = {
                         actor: "agent",
                         message: response.response,
@@ -114,6 +116,7 @@ export class AgentManager {
                     }
                     await storeMessage(db_messageObject)
                     trace.event({ name: "agent.completed", output: response.response });
+                    trace.update({output: response.response})
                     logger.info("Request handle complete", {traceId: trace.id })
                 }
             }
