@@ -21,10 +21,11 @@ export interface AgentContext {
     userContext: UserContext
 }
 
-interface agentSuccess {
-    taskAgent?: boolean
-    searchAgent?: boolean
-}
+type AgentExecutionState = {
+    status: "pending" | "success" | "failed";
+    result?: AgentResponse;
+    error?: Error;
+};
 
 export interface ExecutionContext {
     id: UUID,
@@ -35,7 +36,7 @@ export interface ExecutionContext {
     execution_end?: string,
     status: string,
     iteration_count: number,
-    agentSuccess?: agentSuccess
+    agentStatus: Record<string, AgentExecutionState>
 }
 
 interface AgentSkill {
@@ -84,4 +85,19 @@ export interface Agent {
     input: Omit<{role: string, content: string }, "externalId" | "traceIdType">[]
     prompt: ChatPromptClient,
     modelConfig?: modelConfig
+}
+
+export interface OrchestratorResponse {
+    agents: {
+        [agentName: string]: {
+            reason: string;
+            task: string;
+        }
+    }
+}
+
+export interface AgentResponse {
+    response?: string,
+    reason?: string,
+    data?: string
 }

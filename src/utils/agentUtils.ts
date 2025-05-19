@@ -24,5 +24,6 @@ export function constructExecutionContext(): ExecutionContext {
         execution_start: new Date().toISOString(),
         status: "Started",
         iteration_count: 0,
+        agentStatus: {}
     }
 }
