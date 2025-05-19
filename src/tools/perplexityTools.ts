@@ -19,7 +19,7 @@ export async function askPerplexity(
     properties: {
         messages: Array<{ role: string; content: string }>,
         model?: string
-    } ,trace: any) {
+    } ,trace:any) {
     // Construct the API endpoint URL and request body
     const url = new URL("https://api.perplexity.ai/chat/completions");
     const body = {
