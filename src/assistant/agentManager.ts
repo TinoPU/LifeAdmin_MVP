@@ -39,6 +39,7 @@ export class AgentManager {
             cacheWhatsappMessage(user, "user", message, messageObject.timestamp).catch(error => logger.error("Error caching WhatsApp message:", error));
             const user_context:UserContext = constructUserContext(user)
             let orchestrator_response: OrchestratorResponse = await OrchestratorAgent(message,executionContext, history,user_context, trace)
+            logger.info("Orchestration Complete")
             trace.event({ name: "orchestration.completed", output: orchestrator_response });
             if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
                 trace.event({
@@ -55,6 +56,7 @@ export class AgentManager {
             executionContext.agentStatus = {}
             for (let agentChoice in orchestrator_response.agents ){
                 const agentFn = agentFunctionMap[agentChoice];
+                logger.info("Calling Agents", {agents: orchestrator_response.agents})
                 if (!agentFn) {
                     logger.warn(`No function found for agent: ${JSON.stringify(agentChoice)}`, {available_agents: Object.keys(agentFunctionMap).map(k => JSON.stringify(k))})
                     continue;
@@ -72,11 +74,11 @@ export class AgentManager {
                     .catch((error) => {
                         executionContext.agentStatus[agentChoice] = { status: "failed", error };
                     });
-
                 agentPromises.push(agentPromise);
+                trace.event({ name: "orchestration.agent.called", metadata: agentChoice});
             }
-
             await Promise.allSettled(agentPromises);
+            trace.event({name: "orchestration.agent.all", statusMessage: "All agents executed"})
             const allOthersSucceeded = Object.entries(executionContext.agentStatus).every(([name, state]) => {
                 return name === responseAgentCard.name || state.status === "success";
             });
