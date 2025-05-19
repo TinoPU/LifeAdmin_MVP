@@ -21,9 +21,11 @@ export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
             return
         }
         const parent_message_id = await storeWhatsAppMessage(messageObject, user, "user")
+        logger.info("Stored incoming WA message")
         await cacheLatestUserMessage(user,messageObject.text.body)
         const agentManager = new AgentManager();
         await agentManager.handleNewRequest(user, parent_message_id, messageObject, logger)
+        console.log("Execution end")
     }
 }
 
