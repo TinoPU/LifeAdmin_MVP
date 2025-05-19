@@ -79,7 +79,7 @@ export class AgentManager {
                 agentPromises.push(agentPromise);
                 console.log("pushed agent promise")
                 console.log("execution context:", executionContext)
-                trace.event({ name: "orchestration.agent.called", metadata: agentChoice});
+                trace.event({ name: "Agent Called", metadata: agentChoice});
             }
             await Promise.allSettled(agentPromises);
             trace.event({name: "orchestration.agent.all", statusMessage: "All agents prepared"})
@@ -90,6 +90,7 @@ export class AgentManager {
             logger.info("Agent Status completed", {agentStatus: executionContext.agentStatus})
             console.log("all succeded: ", allOthersSucceeded)
             console.log("execution Context ", executionContext)
+            trace.event({name:"Agents Checked - Execution Context", metadata: executionContext})
 
             if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
                 trace.event({
