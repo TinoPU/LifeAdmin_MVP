@@ -13,12 +13,8 @@ export async function WebsearchAgent (user_message: string, execution_context: E
     const messages = [
         {
             "role": "user",
-            "content": user_message
+            "content": prompt + "/n ------ unrefined user message for context: " + user_message
         },
-        {
-            "role": "user",
-            "content": prompt
-        }
     ]
     const properties = {
         messages: messages
