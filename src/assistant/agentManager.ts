@@ -64,7 +64,8 @@ export class AgentManager {
                 if (agentChoice === responseAgentCard.name) {
                     continue; // defer Response Agent
                 }
-                const agentPromise = agentFn(message, executionContext, history, trace)
+                const agentprompt = orchestrator_response.agents[agentChoice].task;
+                const agentPromise = agentFn(message, executionContext, history, agentprompt, trace)
                     .then((result) => {
                         executionContext.agentStatus[agentChoice] = { status: "success", result };
                     })

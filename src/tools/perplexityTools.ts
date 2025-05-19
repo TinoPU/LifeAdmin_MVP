@@ -1,10 +1,5 @@
 
 
-
-// Retrieve the Perplexity API key from environment variables
-import {User} from "../types/db";
-import {defaultModelConfig} from "../config/modelConfig";
-
 const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
 if (!PERPLEXITY_API_KEY) {
     console.error("Error: PERPLEXITY_API_KEY environment variable is required");
@@ -24,7 +19,7 @@ export async function askPerplexity(
     properties: {
         messages: Array<{ role: string; content: string }>,
         model?: string
-    }, user:User, trace: any) {
+    } ,trace: any) {
     // Construct the API endpoint URL and request body
     const url = new URL("https://api.perplexity.ai/chat/completions");
     const body = {
