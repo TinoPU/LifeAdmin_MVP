@@ -6,7 +6,7 @@ export const websearchAgentCard: AgentCard = {
     description: "Performs web searches to find up-to-date information on topics that require current data or extensive research"
 }
 
-export async function WebsearchAgent (user_message: string, execution_context: ExecutionContext, trace:any, prompt:string):Promise<AgentResponse> {
+export async function WebsearchAgent (user_message: string, execution_context: ExecutionContext,   history: string[], trace:any, prompt:string):Promise<AgentResponse> {
 
     execution_context.agentStatus[websearchAgentCard.name] = {status:"pending"}
     const messages = [
