@@ -78,10 +78,11 @@ export class AgentManager {
                 trace.event({ name: "orchestration.agent.called", metadata: agentChoice});
             }
             await Promise.allSettled(agentPromises);
-            trace.event({name: "orchestration.agent.all", statusMessage: "All agents executed"})
+            trace.event({name: "orchestration.agent.all", statusMessage: "All agents prepared"})
             const allOthersSucceeded = Object.entries(executionContext.agentStatus).every(([name, state]) => {
                 return name === responseAgentCard.name || state.status === "success";
             });
+            logger.info("Agent Status completed", {agentStatus: executionContext.agentStatus})
 
             if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
                 trace.event({

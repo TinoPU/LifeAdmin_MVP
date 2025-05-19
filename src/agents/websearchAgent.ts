@@ -8,6 +8,7 @@ export const websearchAgentCard: AgentCard = {
 
 export async function WebsearchAgent (user_message: string, execution_context: ExecutionContext, trace:any, prompt:string):Promise<AgentResponse> {
 
+    execution_context.agentStatus[websearchAgentCard.name] = {status:"pending"}
     const messages = [
         {
             "role": "user",
@@ -26,6 +27,7 @@ export async function WebsearchAgent (user_message: string, execution_context: E
         const perplexity = await askPerplexity(properties, trace)
         if (perplexity.success) {
             execution_context.agentStatus[websearchAgentCard.name] = {status: "success", result:perplexity.message}
+            execution_context.agent_messages.push(`${websearchAgentCard.name}: ${perplexity.message}`)
             return {response: perplexity.message}
         } else {
             execution_context.agentStatus[websearchAgentCard.name] = {status: "failed", result: perplexity.message}
