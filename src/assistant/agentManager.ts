@@ -56,7 +56,7 @@ export class AgentManager {
             for (let agentChoice in orchestrator_response.agents ){
                 const agentFn = agentFunctionMap[agentChoice];
                 if (!agentFn) {
-                    logger.warn(`No function found for agent: ${agentChoice}`);
+                    logger.warn(`No function found for agent: ${JSON.stringify(agentChoice)}`, {available_agents: Object.keys(agentFunctionMap).map(k => JSON.stringify(k))})
                     continue;
                 }
                 executionContext.agentStatus[agentChoice] = { status: "pending" };

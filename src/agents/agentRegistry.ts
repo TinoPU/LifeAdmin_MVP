@@ -12,7 +12,4 @@ export function availableAgents() {
 export const agentFunctionMap: Record<string, (user_message: string, context: ExecutionContext, history: string[], prompt:string, trace:any) => Promise<AgentResponse>> = {
     [responseAgentCard.name]: ResponseAgent,
     [websearchAgentCard.name]: WebsearchAgent
-    // Add more agents here, like:
-    // "Search Agent": SearchAgent,
-    // "Planner Agent": PlannerAgent,
 };
