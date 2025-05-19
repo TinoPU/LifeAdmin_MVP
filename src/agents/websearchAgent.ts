@@ -35,7 +35,6 @@ export async function WebsearchAgent (user_message: string, execution_context: E
             return {response: perplexity.message}
         }
     } catch (error) {
-        trace.event({ name: "websearch.error", output: error });
         execution_context.agentStatus[websearchAgentCard.name] = {status: "failed", result: {}}
         return {response: `Websearch failed with error: ${error}`}
     }
