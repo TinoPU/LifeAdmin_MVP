@@ -8,7 +8,7 @@ export const orchestratorAgentCard: AgentCard = {
     description: "This Agent receives user messages and evaluates the request to determine which Agents to call to handle it"
 }
 
-export async function OrchestratorAgent(user_message: string, execution_context: ExecutionContext, conversation_history:string[], user_context:UserContext, trace:any): Promise<OrchestratorResponse> {
+export async function OrchestratorAgent(user_message: string, execution_context: ExecutionContext, history:string[], user_context:UserContext, trace:any): Promise<OrchestratorResponse> {
 
     const chatPrompt = await langfuse.getPrompt("OrchestratorAgent", undefined, {
         type: "chat",
@@ -19,7 +19,7 @@ export async function OrchestratorAgent(user_message: string, execution_context:
         userMessage: user_message,
         execution_context: compiled_context,
         agents: availableAgents(),
-        conversation_history: JSON.stringify(conversation_history, null,2),
+        conversation_history: JSON.stringify(history, null,2),
         user_context: JSON.stringify(user_context, null, 2)
     });
 
