@@ -41,6 +41,7 @@ export class AgentManager {
             let orchestrator_response: OrchestratorResponse = await OrchestratorAgent(message,executionContext, history,user_context, trace)
             logger.info("Orchestration Complete")
             trace.event({ name: "orchestration.completed", output: orchestrator_response });
+            console.log("orchestrator done")
             if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
                 trace.event({
                     name: "execution.stop",
@@ -57,6 +58,7 @@ export class AgentManager {
             for (let agentChoice in orchestrator_response.agents ){
                 const agentFn = agentFunctionMap[agentChoice];
                 logger.info("Calling Agents", {agents: orchestrator_response.agents})
+                console.log("starting to call agents")
                 if (!agentFn) {
                     logger.warn(`No function found for agent: ${JSON.stringify(agentChoice)}`, {available_agents: Object.keys(agentFunctionMap).map(k => JSON.stringify(k))})
                     continue;
@@ -75,14 +77,19 @@ export class AgentManager {
                         executionContext.agentStatus[agentChoice] = { status: "failed", error };
                     });
                 agentPromises.push(agentPromise);
+                console.log("pushed agent promise")
+                console.log("execution context:", executionContext)
                 trace.event({ name: "orchestration.agent.called", metadata: agentChoice});
             }
             await Promise.allSettled(agentPromises);
             trace.event({name: "orchestration.agent.all", statusMessage: "All agents prepared"})
+            console.log("all promises settled")
             const allOthersSucceeded = Object.entries(executionContext.agentStatus).every(([name, state]) => {
                 return name === responseAgentCard.name || state.status === "success";
             });
             logger.info("Agent Status completed", {agentStatus: executionContext.agentStatus})
+            console.log("all succeded: ", allOthersSucceeded)
+            console.log("execution Context ", executionContext)
 
             if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
                 trace.event({
