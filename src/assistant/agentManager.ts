@@ -104,6 +104,7 @@ export class AgentManager {
                     }
                     await sendMessage(messageObject.from, response.response, logger, "Response Agent");
                     const timeNow = new Date().toISOString();
+                    await cacheWhatsappMessage(user, "agent", response.response, timeNow)
                     const db_messageObject: Message = {
                         actor: "agent",
                         message: response.response,
