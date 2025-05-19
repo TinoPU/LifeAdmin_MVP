@@ -19,7 +19,7 @@ export class AgentManager {
         logger.info("Handling new Request", {requestObject: messageObject})
         const session: Session = await getSession(user)
         const executionContext: ExecutionContext = constructExecutionContext()
-        const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id, sessionId: session.id.toString() });
+        const trace = langfuse.trace({ name: "agent.handleNewRequest", userId: user.id, sessionId: session.id.toString(), input: messageObject.text?.body });
         trace.event({ name: "request.received", input: { text: messageObject.text?.body } });
 
         try {
@@ -115,6 +115,7 @@ export class AgentManager {
                     }
                     await storeMessage(db_messageObject)
                     trace.event({ name: "agent.completed", output: response.response });
+                    trace.update({output: response.response})
                     logger.info("Request handle complete", {traceId: trace.id })
                 }
             }
