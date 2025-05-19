@@ -19,7 +19,7 @@ export async function OrchestratorAgent(user_message: string, execution_context:
         userMessage: user_message,
         execution_context: compiled_context,
         agents: availableAgents(),
-        conversation_history: JSON.stringify(history, null,2),
+        history: JSON.stringify(history, null,2),
         user_context: JSON.stringify(user_context, null, 2)
     });
 
