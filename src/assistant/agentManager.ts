@@ -5,7 +5,7 @@ import {WAIncomingMessage} from "../types/incomingWAObject/WAIncomingMessage";
 import {cacheWhatsappMessage} from "../utils/redisActions";
 import {Message, Session} from "../types/message";
 import {User} from "../types/db";
-import {ExecutionContext, OrchestratorResponse, UserContext} from "../types/agent";
+import {AgentProps, ExecutionContext, OrchestratorResponse, UserContext} from "../types/agent";
 import {constructExecutionContext} from "../utils/agentUtils";
 import {langfuse} from "../services/loggingService";
 import {getSession} from "../utils/chatUtils";
@@ -69,7 +69,14 @@ export class AgentManager {
                     continue; // defer Response Agent
                 }
                 const agentprompt = orchestrator_response.agents[agentChoice].task;
-                const agentPromise = agentFn(message, executionContext, history, agentprompt, trace)
+                const agentProps: AgentProps = {
+                    user_message: message,
+                    context: executionContext,
+                    history: history,
+                    prompt: agentprompt,
+                    trace:trace
+                }
+                const agentPromise = agentFn(agentProps)
                     .then((result) => {
                         executionContext.agentStatus[agentChoice] = { status: "success", result };
                     })
@@ -103,7 +110,7 @@ export class AgentManager {
             }
 
             if (allOthersSucceeded) {
-                const response = await ResponseAgent(message, executionContext, history, trace)
+                const response = await ResponseAgent({user_message:message, context:executionContext, trace:trace, history:history })
                 if (response.response) {
                     if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
                         trace.event({
