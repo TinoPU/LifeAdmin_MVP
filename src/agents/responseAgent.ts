@@ -11,9 +11,12 @@ export const responseAgentCard: AgentCard = {
 
 
 export async function ResponseAgent(props: AgentProps): Promise<AgentResponse> {
-    const span = props.trace.span({name: "Response Agent",
-        input: props
-    })
+    const span = props.trace.span({
+        name: "Response",
+        input: {
+            props: props,
+        },
+    });
 
     props.context.agentStatus[orchestratorAgentCard.name] = {status: "pending", result: {}}
     const chatPrompt = await langfuse.getPrompt("ResponseAgent", undefined, {
