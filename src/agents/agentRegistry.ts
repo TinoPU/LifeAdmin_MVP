@@ -1,6 +1,6 @@
 import {AgentCard, AgentProps, AgentResponse} from "../types/agent";
 import {ResponseAgent, responseAgentCard} from "./responseAgent";
-import {taskAgentCard} from "./taskAgent";
+import {TaskAgent, taskAgentCard} from "./taskAgent";
 import {WebsearchAgent, websearchAgentCard} from "./websearchAgent";
 import {orchestratorAgentCard} from "./orchestratorAgent";
 
@@ -11,5 +11,6 @@ export function availableAgents() {
 
 export const agentFunctionMap: Record<string, (props: AgentProps) => Promise<AgentResponse>> = {
     [responseAgentCard.name]: ResponseAgent,
-    [websearchAgentCard.name]: WebsearchAgent
+    [websearchAgentCard.name]: WebsearchAgent,
+    [taskAgentCard.name]: TaskAgent
 };
