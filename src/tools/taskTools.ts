@@ -111,7 +111,10 @@ export async function modifyTaskTool(
     if (properties.method === "DELETE") {
         await deleteTask(properties.task_id)
         trace.event({name: "modifyTaskTool.success", statusMessage: "Deleted task"})
-        return
+        return {
+            success: true,
+            message: `Task Deleted`
+        }
     }
     if (properties.method === "UPDATE") {
         if (!properties.task) {
@@ -124,7 +127,10 @@ export async function modifyTaskTool(
         else {
             await updateTask(properties.task_id, properties.task)
             trace.event({name: "modifyTaskTool.success", statusMessage: "Updated task"})
-            return
+            return {
+                success: true,
+                message: `Task Updated`
+            }
         }
     }
     else {

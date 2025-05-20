@@ -1,6 +1,7 @@
 import {UUID} from "./message";
 import {modelConfig} from "../config/modelConfig";
 import {ChatPromptClient} from "langfuse";
+import {User} from "./db";
 
 export interface UserContext {
     name?: string,
@@ -106,6 +107,7 @@ export interface AgentResponse {
 export interface AgentProps {
     user_message: string,
     context: ExecutionContext,
+    user: User
     history: string[],
     prompt?: string,
     trace: any

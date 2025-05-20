@@ -1,36 +1,9 @@
 import {createTaskTool, modifyTaskTool} from "./taskTools";
 import {User} from "../types/db";
-import {askPerplexity} from "./perplexityTools";
+import {ToolFunction, ToolSchema} from "../types/tool";
 
-export type ToolFunction = (properties: any, user: User, trace: any) => Promise<{
-    success: boolean;
-    message: string;
-    updated_parameters?: any
-}>;
-export interface ToolProperty {
-    type: string;
-    description: string;
-    enum?: string[],
-    properties?: Record<string, ToolProperty>;
-    items?: Record<string, ToolProperty>[]
-}
-export interface ToolSchema {
-    name: string;
-    description: string;
-    input_schema: {
-        type: string;
-        items?: Record<string, ToolProperty>[]
-        properties: Record<string, ToolProperty>
-        required: string[]
-    };
-}
-export interface ToolResult {
-    success: boolean;
-    message: string;
-    updated_parameters?: any
-}
 
-export const toolRegistry: Record<string, {
+export const taskToolRegistry: Record<string, {
     function: ToolFunction;
     schema: ToolSchema;
 }> = {
@@ -90,36 +63,6 @@ export const toolRegistry: Record<string, {
                 required: ["task_id", "method"]
             }
         }
-    },
-    search_web_with_perplexity: {
-        function: askPerplexity,
-        schema: {
-            name: "search_web_with_perplexity",
-            description:
-                "Engages in a conversation using the Sonar API. Which can search the web " +
-                "Accepts an array of messages (each with a role and content) " +
-                "and returns a ask completion response from the Perplexity model including citations from internet sources",
-            input_schema: {
-                type: "object",
-                properties: {
-                    messages: {
-                        type: "array",
-                        description: "Array of conversation messages",
-                        items: [{
-                                role: {
-                                    type: "string",
-                                    description: "Role of the message (e.g., system, user, assistant)",
-                                },
-                                content: {
-                                    type: "string",
-                                    description: "The content of the message",
-                                },
-                            }],
-                        },
-                    },
-                required: ["messages"],
-            },
-        },
     }
 }
     // update_reminder: {
@@ -135,11 +78,9 @@ export const toolRegistry: Record<string, {
     //     }
     // }
 
-/**
- * Executes a tool dynamically based on its name.
- */
+
 export async function executeTool(toolName: string, properties: any, user:User, trace:any) {
-    const tool = toolRegistry[toolName];
+    const tool = taskToolRegistry[toolName];
 
     if (!tool) {
         return { success: false, message: `Tool '${toolName}' not found.` };
@@ -148,14 +89,11 @@ export async function executeTool(toolName: string, properties: any, user:User, 
     return await tool.function(properties, user, trace);
 }
 
-/**
- * Retrieves full tool schema descriptions for LLM context.
- */
 export function getToolSchema(): ToolSchema[] {
-    return Object.values(toolRegistry).map(tool => tool.schema);
+    return Object.values(taskToolRegistry).map(tool => tool.schema);
 }
 
 export function getToolByName(toolName: string): ToolSchema | null {
-    const tool = toolRegistry[toolName];
+    const tool = taskToolRegistry[toolName];
     return tool.schema;
 }
