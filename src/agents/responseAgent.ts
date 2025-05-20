@@ -11,6 +11,9 @@ export const responseAgentCard: AgentCard = {
 
 
 export async function ResponseAgent(props: AgentProps): Promise<AgentResponse> {
+    const span = props.trace.span({name: "Response Agent",
+        input: props
+    })
 
     props.context.agentStatus[orchestratorAgentCard.name] = {status: "pending", result: {}}
     const chatPrompt = await langfuse.getPrompt("ResponseAgent", undefined, {
@@ -36,12 +39,14 @@ export async function ResponseAgent(props: AgentProps): Promise<AgentResponse> {
     }
 
     try {
-        const response: AgentResponse =  await callAgent(agent, props.trace)
+        const response: AgentResponse =  await callAgent(agent, span)
         props.context.agentStatus[orchestratorAgentCard.name] = {status: "success", result: response}
+        span.end({output: response})
         return response
     } catch (error) {
-        props.trace.event({ name: "response.error", output: error });
+        span.event({ name: "response.error", output: error });
         props.context.agentStatus[orchestratorAgentCard.name] = {status: "failed", result: {}}
+        span.end()
         return {response: "Kann gerade nicht digga"}
     }
 }
