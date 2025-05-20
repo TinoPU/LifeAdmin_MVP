@@ -1,4 +1,4 @@
-import {AgentCard, AgentResponse, ExecutionContext} from "../types/agent";
+import {AgentCard, AgentProps, AgentResponse} from "../types/agent";
 import {askPerplexity} from "../tools/perplexityTools";
 
 
@@ -7,13 +7,13 @@ export const websearchAgentCard: AgentCard = {
     description: "Performs web searches to find up-to-date information on topics that require current data or extensive research"
 }
 
-export async function WebsearchAgent (user_message: string, execution_context: ExecutionContext,   history: string[], prompt:string, trace:any):Promise<AgentResponse> {
+export async function WebsearchAgent (props: AgentProps):Promise<AgentResponse> {
 
-    execution_context.agentStatus[websearchAgentCard.name] = {status:"pending"}
+    props.context.agentStatus[websearchAgentCard.name] = {status:"pending"}
     const messages = [
         {
             "role": "user",
-            "content": prompt + "/n ------ unrefined user message for context: " + user_message
+            "content": props.prompt + "/n ------ unrefined user message for context: " + props.user_message
         },
     ]
     const properties = {
@@ -21,17 +21,17 @@ export async function WebsearchAgent (user_message: string, execution_context: E
     }
 
     try {
-        const perplexity = await askPerplexity(properties, trace)
+        const perplexity = await askPerplexity(properties, props.trace)
         if (perplexity.success) {
-            execution_context.agentStatus[websearchAgentCard.name] = {status: "success", result:perplexity.message}
-            execution_context.agent_messages.push(`${websearchAgentCard.name}: ${perplexity.message}`)
+            props.context.agentStatus[websearchAgentCard.name] = {status: "success", result:perplexity.message}
+            props.context.agent_messages.push(`${websearchAgentCard.name}: ${perplexity.message}`)
             return {response: perplexity.message}
         } else {
-            execution_context.agentStatus[websearchAgentCard.name] = {status: "failed", result: perplexity.message}
+            props.context.agentStatus[websearchAgentCard.name] = {status: "failed", result: perplexity.message}
             return {response: perplexity.message}
         }
     } catch (error) {
-        execution_context.agentStatus[websearchAgentCard.name] = {status: "failed", result: {}}
+        props.context.agentStatus[websearchAgentCard.name] = {status: "failed", result: {}}
         return {response: `Websearch failed with error: ${error}`}
     }
 }

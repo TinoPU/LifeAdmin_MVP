@@ -101,3 +101,12 @@ export interface AgentResponse {
     reason?: string,
     data?: string
 }
+
+
+export interface AgentProps {
+    user_message: string,
+    context: ExecutionContext,
+    history: string[],
+    prompt?: string,
+    trace: any
+}
