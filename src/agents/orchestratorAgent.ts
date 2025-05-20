@@ -9,7 +9,12 @@ export const orchestratorAgentCard: AgentCard = {
 }
 
 export async function OrchestratorAgent(user_message: string, execution_context: ExecutionContext, history:string[], user_context:UserContext, trace:any): Promise<OrchestratorResponse> {
-
+    const span = trace.span({
+        name: "Orchestration",
+        input: {
+            userInput: user_message,
+        },
+    });
     const chatPrompt = await langfuse.getPrompt("OrchestratorAgent", undefined, {
         type: "chat",
     });
@@ -34,11 +39,13 @@ export async function OrchestratorAgent(user_message: string, execution_context:
         }}
 
     try {
-        const orchestrator_response: OrchestratorResponse =  await callAgent(agent,trace)
+        const orchestrator_response: OrchestratorResponse =  await callAgent(agent, span)
         execution_context.agentStatus[orchestratorAgentCard.name] = {status: "success", result: orchestrator_response.agents}
+        span.end({output: orchestrator_response})
         return orchestrator_response
     } catch (error) {
-        trace.event({ name: "orchestration.error", output: error });
+        span.event({ name: "orchestration.error", output: error });
+        span.end()
         return {agents: {}}
     }
 }

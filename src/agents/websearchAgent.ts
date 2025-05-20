@@ -9,6 +9,9 @@ export const websearchAgentCard: AgentCard = {
 
 export async function WebsearchAgent (props: AgentProps):Promise<AgentResponse> {
 
+    const span = props.trace.span({name: "Websearch Agent",
+        input: props });
+
     props.context.agentStatus[websearchAgentCard.name] = {status:"pending"}
     const messages = [
         {
@@ -21,17 +24,20 @@ export async function WebsearchAgent (props: AgentProps):Promise<AgentResponse> 
     }
 
     try {
-        const perplexity = await askPerplexity(properties, props.trace)
+        const perplexity = await askPerplexity(properties, span)
         if (perplexity.success) {
             props.context.agentStatus[websearchAgentCard.name] = {status: "success", result:perplexity.message}
             props.context.agent_messages.push(`${websearchAgentCard.name}: ${perplexity.message}`)
+            span.end({output: perplexity})
             return {response: perplexity.message}
         } else {
             props.context.agentStatus[websearchAgentCard.name] = {status: "failed", result: perplexity.message}
+            span.end({output: perplexity})
             return {response: perplexity.message}
         }
     } catch (error) {
         props.context.agentStatus[websearchAgentCard.name] = {status: "failed", result: {}}
+        span.event({name:"Websearch error", statusMessage: error, level: "ERROR"})
         return {response: `Websearch failed with error: ${error}`}
     }
 }
