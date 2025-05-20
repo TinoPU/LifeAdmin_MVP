@@ -74,7 +74,8 @@ export class AgentManager {
                     context: executionContext,
                     history: history,
                     prompt: agentprompt,
-                    trace:trace
+                    trace:trace,
+                    user: user
                 }
                 const agentPromise = agentFn(agentProps)
                     .then((result) => {
@@ -110,7 +111,7 @@ export class AgentManager {
             }
 
             if (allOthersSucceeded) {
-                const response = await ResponseAgent({user_message:message, context:executionContext, trace:trace, history:history })
+                const response = await ResponseAgent({user_message:message, context:executionContext, trace:trace, history:history, user:user })
                 if (response.response) {
                     if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
                         trace.event({
