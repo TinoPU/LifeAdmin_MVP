@@ -61,7 +61,7 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
         span.end({output: executionResult})
         return response
     } catch (error) {
-        span.event({ name: "task.error", output: error });
+        span.event({ name: "task.error", output: error instanceof Error ? error.message : String(error)});
         props.context.agentStatus[taskAgentCard.name] = {status: "failed", result: {}}
         span.end()
         return {response: "Kann gerade nicht digga"}
