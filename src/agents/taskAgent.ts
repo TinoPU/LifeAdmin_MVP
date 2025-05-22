@@ -50,6 +50,7 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
         const {tool, parameters} = parsed
         if (tool === "none") {
             props.context.agentStatus[taskAgentCard.name] = {status: "success", result: response}
+            props.context.agent_messages.push(`${websearchAgentCard.name}: ${JSON.stringify(response)}`)
             span.end({output: response})
             return response
         }
