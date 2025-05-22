@@ -47,7 +47,7 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
     try {
         const response: AgentResponse =  await callAgent(agent, span)
         console.log(response)
-        const parsed = JSON.parse(response.response ?? '{}');
+        const parsed = JSON.parse(JSON.stringify(response));
         console.log(parsed)
         const {tool, parameters} = parsed
         if (tool === "none") {
