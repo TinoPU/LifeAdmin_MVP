@@ -3,6 +3,7 @@ import {langfuse} from "../services/loggingService";
 import {callAgent} from "../services/agentService";
 import {constructTaskContext} from "../utils/taskUtils";
 import {executeTool, getToolSchema} from "../tools/toolRegistry";
+import {websearchAgentCard} from "./websearchAgent";
 
 export const taskAgentCard: AgentCard = {
     name: "Task Agent",
@@ -55,6 +56,7 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
         const executionResult = await executeTool(tool, parameters, props.user, span);
         const result = {response: JSON.stringify(executionResult)}
         props.context.agentStatus[taskAgentCard.name] = {status: "success", result: result}
+        props.context.agent_messages.push(`${websearchAgentCard.name}: ${JSON.stringify(executionResult)}`)
         span.end({output: executionResult})
         return response
     } catch (error) {
