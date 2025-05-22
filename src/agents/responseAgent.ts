@@ -12,9 +12,13 @@ export const responseAgentCard: AgentCard = {
 
 export async function ResponseAgent(props: AgentProps): Promise<AgentResponse> {
     const span = props.trace.span({
-        name: "Response",
+        name: "ResponseAgent",
         input: {
-            ...props
+            user_message: props.user_message,
+            prompt: props.prompt,
+            history: props.history,
+            executionContext: JSON.stringify(props.context)
+
         },
     });
 

@@ -49,24 +49,21 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
         }
     }
     try {
-        const response: string =  await callAgent(agent, span)
-        console.log(response)
-        const parsed = JSON.parse(response)
-        console.log(parsed)
-        const {tool, parameters, resp} = parsed
+        const response: any =  await callAgent(agent, span)
+        const {tool, parameters, modelResponse} = response
         if (tool === "none") {
             props.context.agentStatus[taskAgentCard.name] = {status: "success", result: response}
-            props.context.agent_messages.push(`${websearchAgentCard.name}: ${resp}`)
+            props.context.agent_messages.push(`${websearchAgentCard.name}: ${modelResponse}`)
             console.log(props.context)
-            span.end({output: resp})
-            return parsed
+            span.end({output: modelResponse})
+            return response
         }
         const executionResult = await executeTool(tool, parameters, props.user, span);
         const result = {response: JSON.stringify(executionResult)}
         props.context.agentStatus[taskAgentCard.name] = {status: "success", result: result}
         props.context.agent_messages.push(`${websearchAgentCard.name}: ${JSON.stringify(executionResult)}`)
         span.end({output: executionResult})
-        return parsed
+        return response
     } catch (error) {
         span.event({ name: "task.error", output: error instanceof Error ? error.message : String(error)});
         props.context.agentStatus[taskAgentCard.name] = {status: "failed", result: {}}
