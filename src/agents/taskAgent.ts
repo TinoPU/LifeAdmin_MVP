@@ -49,9 +49,9 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
         }
     }
     try {
-        const response: AgentResponse =  await callAgent(agent, span)
+        const response: string =  await callAgent(agent, span)
         console.log(response)
-        const parsed = JSON.parse(JSON.stringify(response));
+        const parsed = JSON.parse(response)
         console.log(parsed)
         const {tool, parameters, resp} = parsed
         if (tool === "none") {
@@ -59,14 +59,14 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
             props.context.agent_messages.push(`${websearchAgentCard.name}: ${resp}`)
             console.log(props.context)
             span.end({output: resp})
-            return response
+            return parsed
         }
         const executionResult = await executeTool(tool, parameters, props.user, span);
         const result = {response: JSON.stringify(executionResult)}
         props.context.agentStatus[taskAgentCard.name] = {status: "success", result: result}
         props.context.agent_messages.push(`${websearchAgentCard.name}: ${JSON.stringify(executionResult)}`)
         span.end({output: executionResult})
-        return response
+        return parsed
     } catch (error) {
         span.event({ name: "task.error", output: error instanceof Error ? error.message : String(error)});
         props.context.agentStatus[taskAgentCard.name] = {status: "failed", result: {}}
