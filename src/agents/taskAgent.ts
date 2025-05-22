@@ -49,12 +49,12 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
         console.log(response)
         const parsed = JSON.parse(JSON.stringify(response));
         console.log(parsed)
-        const {tool, parameters} = parsed
+        const {tool, parameters, resp} = parsed
         if (tool === "none") {
             props.context.agentStatus[taskAgentCard.name] = {status: "success", result: response}
-            props.context.agent_messages.push(`${websearchAgentCard.name}: ${response}`)
+            props.context.agent_messages.push(`${websearchAgentCard.name}: ${resp}`)
             console.log(props.context)
-            span.end({output: response})
+            span.end({output: resp})
             return response
         }
         const executionResult = await executeTool(tool, parameters, props.user, span);
