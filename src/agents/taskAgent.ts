@@ -14,7 +14,11 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
     const span = props.trace.span({
         name: "TaskAgent",
         input: {
-            ...props
+            user_message: props.user_message,
+            prompt: props.prompt,
+            history: props.history,
+            executionContext: JSON.stringify(props.context)
+
         },
     });
 
