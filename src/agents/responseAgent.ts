@@ -14,7 +14,7 @@ export async function ResponseAgent(props: AgentProps): Promise<AgentResponse> {
     const span = props.trace.span({
         name: "Response",
         input: {
-            props: props,
+            ...props
         },
     });
 

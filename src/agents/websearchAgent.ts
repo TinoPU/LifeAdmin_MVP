@@ -12,7 +12,7 @@ export async function WebsearchAgent (props: AgentProps):Promise<AgentResponse> 
     const span = props.trace.span({
         name: "Websearch",
         input: {
-            props: props,
+            ...props
         },
     });
 
