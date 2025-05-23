@@ -3,7 +3,6 @@ import {langfuse} from "../services/loggingService";
 import {callAgent} from "../services/agentService";
 import {constructTaskContext} from "../utils/taskUtils";
 import {executeTool, getToolSchema} from "../tools/toolRegistry";
-import {websearchAgentCard} from "./websearchAgent";
 import {constructUserContext} from "../utils/userUtils";
 
 export const taskAgentCard: AgentCard = {
@@ -33,7 +32,7 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
     const userContext = constructUserContext(props.user)
 
     const compiledChatPrompt = chatPrompt.compile({
-        userMessage: props.user_message,
+        user_message: props.user_message,
         prompt: props.prompt || "",
         taskContext: taskContext,
         toolSchema: toolSchema,
@@ -55,7 +54,7 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
         const {tool, parameters, modelResponse} = response
         if (tool === "none") {
             props.context.agentStatus[taskAgentCard.name] = {status: "success", result: response}
-            props.context.agent_messages.push(`${websearchAgentCard.name}: ${modelResponse}`)
+            props.context.agent_messages.push(`${taskAgentCard.name}: ${modelResponse}`)
             console.log(props.context)
             span.end({output: modelResponse})
             return response
@@ -63,7 +62,7 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
         const executionResult = await executeTool(tool, parameters, props.user, span);
         const result = {response: JSON.stringify(executionResult)}
         props.context.agentStatus[taskAgentCard.name] = {status: "success", result: result}
-        props.context.agent_messages.push(`${websearchAgentCard.name}: ${JSON.stringify(executionResult)}`)
+        props.context.agent_messages.push(`${taskAgentCard.name}: ${JSON.stringify(executionResult)}`)
         span.end({output: executionResult})
         return response
     } catch (error) {
