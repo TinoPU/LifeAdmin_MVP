@@ -4,6 +4,7 @@ import {callAgent} from "../services/agentService";
 import {constructTaskContext} from "../utils/taskUtils";
 import {executeTool, getToolSchema} from "../tools/toolRegistry";
 import {websearchAgentCard} from "./websearchAgent";
+import {constructUserContext} from "../utils/userUtils";
 
 export const taskAgentCard: AgentCard = {
     name: "Task Agent",
@@ -17,8 +18,7 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
             user_message: props.user_message,
             prompt: props.prompt,
             history: props.history,
-            executionContext: JSON.stringify(props.context)
-
+            executionContext: JSON.stringify(props.context),
         },
     });
 
@@ -30,12 +30,14 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
 
     const taskContext = JSON.stringify(await constructTaskContext(props.user), null, 2)
     const toolSchema = JSON.stringify(getToolSchema(), null, 2)
+    const userContext = constructUserContext(props.user)
 
     const compiledChatPrompt = chatPrompt.compile({
         userMessage: props.user_message,
         prompt: props.prompt || "",
         taskContext: taskContext,
         toolSchema: toolSchema,
+        user_datetime: userContext.time_at_user_location
     });
 
     const agent = {

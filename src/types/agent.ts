@@ -5,7 +5,7 @@ import {User} from "./db";
 
 export interface UserContext {
     name?: string,
-    time_at_user_location?: string
+    time_at_user_location: string
     language?: string
 }
 
