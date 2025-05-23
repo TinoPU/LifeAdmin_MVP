@@ -5,6 +5,7 @@ import {Task, User} from "../types/db";
 import {AgentContext, UserContext} from "../types/agent";
 import {langfuse} from "./loggingService";
 import {defaultModelConfig} from "../config/modelConfig";
+import {constructUserContext} from "../utils/userUtils";
 
 
 
@@ -158,7 +159,7 @@ export async function callLLMToolFeedback(userMessage: string, userContext:UserC
 export async function generateReminderMessage(task: Task, user: User, history:any[]) {
 
     const trace = langfuse.trace({ name: "agent.generateReminderMessage", userId: user.id });
-    const userContext: UserContext = user
+    const userContext: UserContext = constructUserContext(user)
 
     try {
         const chatPrompt = await langfuse.getPrompt("generateReminderMessage", undefined, {
