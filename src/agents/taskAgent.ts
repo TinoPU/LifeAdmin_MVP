@@ -50,13 +50,13 @@ export async function TaskAgent(props: AgentProps): Promise<AgentResponse> {
         }
     }
     try {
-        const response: any =  await callAgent(agent, span)
-        const {tool, parameters, modelResponse} = response
+        const agentCall: any =  await callAgent(agent, span)
+        const {tool, parameters, response} = agentCall
         if (tool === "none") {
             props.context.agentStatus[taskAgentCard.name] = {status: "success", result: response}
-            props.context.agent_messages.push(`${taskAgentCard.name}: ${modelResponse}`)
+            props.context.agent_messages.push(`${taskAgentCard.name}: ${response}`)
             console.log(props.context)
-            span.end({output: modelResponse})
+            span.end({output: response})
             return response
         }
         const executionResult = await executeTool(tool, parameters, props.user, span);
