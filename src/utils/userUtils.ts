@@ -1,7 +1,8 @@
 import {Contact} from "../types/incomingWAObject/WAIncomingValueObject";
+import {TelegramUser} from "../types/telegram/TelegramIncomingObject";
 import redisClient from "../database/redis";
 import supabase from "../database/supabaseClient";
-import {createNewUser} from "./supabaseActions";
+import {createNewUser, createNewTelegramUser} from "./supabaseActions";
 import {User} from "../types/db";
 import {UserContext} from "../types/agent";
 import {formatDate} from "./transformationUtils";
@@ -51,4 +52,47 @@ export function constructUserContext (user: User) {
     }
 
     return userContext
+}
+
+export async function fetchTelegramUser(telegramUser: TelegramUser) {
+    const telegram_id = telegramUser.id.toString();
+    const redisKey = `user:telegram:${telegram_id}`;
+
+    // 1. Check if user_id is in Redis cache
+    const cachedUserId = await redisClient.get(redisKey);
+    if (cachedUserId) {
+        await baseLogger.info("Telegram User Id found in cache", {cachedUserId: cachedUserId})
+        return JSON.parse(cachedUserId) as User; // Return cached value immediately
+    }
+
+    // 2. Query database if cache is empty
+    const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("telegram_id", telegram_id)
+        .single();
+
+    if (error || !data) {
+        console.log("Telegram User not found in DB. Creating new user...");
+        // 3. Create user if they don't exist
+        const newUser = await createNewTelegramUser(telegramUser);
+        redisClient.set(redisKey, JSON.stringify(newUser), {EX: 86400}).catch()
+        return newUser as User;
+    }
+    // 4. Store user_id in Redis for future requests
+    await redisClient.set(redisKey, JSON.stringify(data), {EX: 86400}); // Expires in 24 hours
+    return data;
+}
+
+export async function getUserByTelegramId(telegramId: string): Promise<User | null> {
+    const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("telegram_id", telegramId)
+        .single();
+
+    if (error || !data) {
+        return null;
+    }
+    return data;
 }

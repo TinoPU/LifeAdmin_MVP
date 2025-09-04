@@ -6,6 +6,7 @@ export interface User {
     phone_number?: string;
     wa_user_id?: string
     wa_id?: string;
+    telegram_id?: string;
     name?: string;
     preferences?: Record<string, any>; // Optional JSON field
     updated_at?: string;

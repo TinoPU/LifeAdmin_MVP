@@ -1,7 +1,7 @@
 import {TelegramIncomingObject, TelegramMessage, TelegramUser} from "../types/telegram/TelegramIncomingObject";
-import {fetchUser} from "../utils/userUtils";
+import {fetchUser, getUserByTelegramId} from "../utils/userUtils";
 import {cacheLatestUserMessage, cacheTelegramMessage} from "../utils/redisActions";
-import {getTask, getUser, storeTelegramMessage} from "../utils/supabaseActions";
+import {getTask, getUser, storeTelegramMessage, createNewTelegramUser} from "../utils/supabaseActions";
 import {AgentManager} from "../assistant/agentManager";
 import {Reminder, SupabaseDueWebhook, Task, User} from "../types/db";
 import {generateReminderMessage} from "./llmService";
@@ -83,10 +83,10 @@ const fetchTelegramUser = async (telegramUser: TelegramUser): Promise<User> => {
     
     if (!user) {
         // Create new user
-        user = await createTelegramUser(telegramUser);
+        user = await createNewTelegramUser(telegramUser);
     }
     
-    return user;
+    return user!;
 };
 
 export const handleIncomingSupabaseWebhookForTelegram = async (data: SupabaseDueWebhook) => {

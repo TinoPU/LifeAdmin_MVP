@@ -1,4 +1,5 @@
 import { WAIncomingMessage } from "../types/incomingWAObject/WAIncomingMessage";
+import { TelegramMessage } from "../types/telegram/TelegramIncomingObject";
 import supabase from "../database/supabaseClient";
 import {Contact} from "../types/incomingWAObject/WAIncomingValueObject";
 import {Message, Session, wa_metadata} from "../types/message";
@@ -141,6 +142,46 @@ export async function storeMessage(message:Message) {
     };
 }
 
+export async function storeTelegramMessage(message: TelegramMessage, user: User, actor: string, response?: string, response_sent_at?: string, parent_message_id?: string) {
+    try {
+        const messageSentAt = new Date(message.date * 1000).toISOString();
+
+        // Construct base message object for storage
+        const messageData: Message = {
+            user_id: user.id || "",
+            message: message.text || "",
+            message_sent_at: messageSentAt,
+            response: response,
+            actor: actor,
+            parent_message_id: parent_message_id,
+            response_sent_at: response_sent_at,
+            type: "text", // Telegram messages are primarily text
+        };
+
+        // Insert message into `messages` table
+        const { data, error: msgError } = await supabase
+            .from("messages")
+            .insert([messageData])
+            .select("id").single()
+        
+        if (msgError) {
+            await baseLogger.error("Telegram Message insertion error", {error: msgError});
+            return null;
+        }
+
+        if (!data) {
+            console.error("❌ Error storing Telegram message: data: ", data);
+            return null;
+        }
+
+        await baseLogger.info("Telegram Message stored successfully", {messageId: data.id, userId: user.id});
+        return data.id;
+    } catch (error) {
+        await baseLogger.error("Error storing Telegram message", {error: error});
+        return null;
+    }
+}
+
 
 
 //// User Methods
@@ -157,6 +198,23 @@ export async function createNewUser(contact: Contact) {
     if (error) {
         await baseLogger.error("User creation failed", {error: error})
         throw new Error("Failed to create new user");
+    }
+
+    return data
+}
+
+export async function createNewTelegramUser(telegramUser: any) {
+    const user = {
+        telegram_id: telegramUser.id.toString(),
+        name: telegramUser.first_name + (telegramUser.last_name ? ` ${telegramUser.last_name}` : ''),
+        user_timezone: 1, // Default timezone, can be updated later
+        language: telegramUser.language_code || 'en'
+    }
+    const {data, error} = await supabase.from("users").insert([user]).select("*").single();
+
+    if (error) {
+        await baseLogger.error("Telegram User creation failed", {error: error})
+        throw new Error("Failed to create new Telegram user");
     }
 
     return data

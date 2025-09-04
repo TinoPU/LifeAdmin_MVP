@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
-import {ToolResult, ToolSchema} from "../tools/toolRegistry";
+import {ToolResult, ToolSchema} from "../types/tool";
 import {Task, User} from "../types/db";
 import {AgentContext, UserContext} from "../types/agent";
 import {langfuse} from "./loggingService";
@@ -205,7 +205,7 @@ export async function generateReminderMessage(task: Task, user: User, history:an
         gen.end({output: response})
         return response
     } catch (error) {
-        trace.event("generateReminderMessage.error", error)
+        trace.event({'name': 'generateReminderMessage.error', 'output': error})
         return
     } finally {
         // ensure flush in Vercel

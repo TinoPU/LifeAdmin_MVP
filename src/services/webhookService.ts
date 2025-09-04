@@ -25,7 +25,7 @@ export const handleIncomingWAWebhook = async (payload: WAIncomingObject) => {
         await cacheLatestUserMessage(user,messageObject.text.body)
         const agentManager = new AgentManager();
         await agentManager.handleNewRequest(user, parent_message_id, messageObject, logger)
-        console.log("Execution end")
+        logger.info("WA message processed", messageObject)
     }
 }
 

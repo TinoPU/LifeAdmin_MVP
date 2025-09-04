@@ -1,8 +1,10 @@
 import conversationService from "../services/conversationService";
 import { storeMessage } from "../utils/supabaseActions";
 import { sendMessage } from "../services/messageService";
+import { sendTelegramMessage } from "../services/telegramMessageService";
 import {WAIncomingMessage} from "../types/incomingWAObject/WAIncomingMessage";
-import {cacheWhatsappMessage} from "../utils/redisActions";
+import {TelegramMessage} from "../types/telegram/TelegramIncomingObject";
+import {cacheWhatsappMessage, cacheTelegramMessage} from "../utils/redisActions";
 import {Message, Session} from "../types/message";
 import {User} from "../types/db";
 import {AgentProps, ExecutionContext, OrchestratorResponse, UserContext} from "../types/agent";
@@ -145,6 +147,143 @@ export class AgentManager {
             await sendMessage(messageObject.from, "Ne da bin ich raus", logger, "AgentManager Error");
             trace.event({ name: "agent.error", output: { message: error } });
             return "Ne da bin ich raus"
+        } finally {
+            // ensure flush in Vercel
+            await langfuse.shutdownAsync();
+        }
+    }
+
+    async handleNewTelegramRequest(user: User, parent_message_id: string, messageObject: TelegramMessage, logger: any) {
+        logger.info("Handling new Telegram Request", {requestObject: messageObject})
+        const session: Session = await getSession(user)
+        const executionContext: ExecutionContext = constructExecutionContext()
+        const trace = langfuse.trace({ name: "agent.handleNewTelegramRequest", userId: user.id, sessionId: session.id.toString(), input: messageObject.text });
+        trace.event({ name: "telegram.request.received", input: { text: messageObject.text } });
+
+        try {
+            if (!user.id) {
+                return "No user provided"
+            }
+            executionContext.user_id = user.id
+            executionContext.session_id = session.id
+            const message = messageObject.text
+            if (typeof message !== "string") {
+                logger.error("Invalid message: Expected a string but received", {message: message});
+                return "Invalid Message type received"; // Stop execution if the message is not a string
+            }
+
+            // Step 1: Orchestration
+            const history = await conversationService.getRecentMessages(user.id);
+            const messageTimestamp = new Date(messageObject.date * 1000).toISOString();
+            cacheTelegramMessage(user, "user", message, messageTimestamp).catch(error => logger.error("Error caching Telegram message:", error));
+            const user_context:UserContext = constructUserContext(user)
+            let orchestrator_response: OrchestratorResponse = await OrchestratorAgent(message,executionContext, history,user_context, trace)
+            logger.info("Telegram Orchestration Complete")
+            trace.event({ name: "telegram.orchestration.completed", output: orchestrator_response });
+            console.log("telegram orchestrator done")
+            if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
+                trace.event({
+                    name: "telegram.execution.stop",
+                    level: "DEFAULT",
+                    metadata: {reason: "Newer User Message found, response no longer up to date."}
+                })
+                logger.info("Telegram Request handle complete", {traceId: trace.id })
+                return
+            }
+
+            const agentPromises: Promise<void>[] = [];
+            // Step 2: Call Agents
+            executionContext.agentStatus = {}
+            for (let agentChoice in orchestrator_response.agents ){
+                const agentFn = agentFunctionMap[agentChoice];
+                logger.info("Calling Telegram Agents", {agents: orchestrator_response.agents})
+                console.log("starting to call telegram agents")
+                if (!agentFn) {
+                    logger.warn(`No function found for agent: ${JSON.stringify(agentChoice)}`, {available_agents: Object.keys(agentFunctionMap).map(k => JSON.stringify(k))})
+                    continue;
+                }
+                executionContext.agentStatus[agentChoice] = { status: "pending" };
+
+                if (agentChoice === responseAgentCard.name) {
+                    continue; // defer Response Agent
+                }
+                const agentprompt = orchestrator_response.agents[agentChoice].task;
+                const agentProps: AgentProps = {
+                    user_message: message,
+                    context: executionContext,
+                    history: history,
+                    prompt: agentprompt,
+                    trace:trace,
+                    user: user
+                }
+                const agentPromise = agentFn(agentProps)
+                    .then((result) => {
+                        executionContext.agentStatus[agentChoice] = { status: "success", result };
+                    })
+                    .catch((error) => {
+                        executionContext.agentStatus[agentChoice] = { status: "failed", error };
+                    });
+                agentPromises.push(agentPromise);
+                console.log("pushed telegram agent promise")
+                console.log("telegram execution context:", executionContext)
+                trace.event({ name: "Telegram Agent Called", metadata: agentChoice});
+            }
+            await Promise.allSettled(agentPromises);
+            trace.event({name: "telegram.orchestration.agent.all", statusMessage: "All telegram agents prepared"})
+            console.log("all telegram promises settled")
+            const allOthersSucceeded = Object.entries(executionContext.agentStatus).every(([name, state]) => {
+                return name === responseAgentCard.name || state.status === "success";
+            });
+            logger.info("Telegram Agent Status completed", {agentStatus: executionContext.agentStatus})
+            console.log("all telegram succeded: ", allOthersSucceeded)
+            console.log("telegram execution Context ", executionContext)
+            trace.event({name:"Telegram Agents Checked - Execution Context", metadata: executionContext})
+
+            if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
+                trace.event({
+                    name: "telegram.execution.stop",
+                    level: "DEFAULT",
+                    metadata: {reason: "Newer User Message found, response no longer up to date."}
+                })
+                logger.info("Telegram Request handle complete", {traceId: trace.id })
+                return
+            }
+
+            if (allOthersSucceeded) {
+                const response = await ResponseAgent({user_message:message, context:executionContext, trace:trace, history:history, user:user })
+                if (response.response) {
+                    if (! await conversationService.isStillLatestUserMessage(user.id, message)) {
+                        trace.event({
+                            name: "telegram.execution.stop",
+                            level: "DEFAULT",
+                            metadata: {reason: "Newer User Message found, response no longer up to date."}
+                        })
+                        logger.info("Telegram Request handle complete", {traceId: trace.id })
+                        return
+                    }
+                    await sendTelegramMessage(messageObject.chat.id, response.response, logger, "Response Agent");
+                    const timeNow = new Date().toISOString();
+                    await cacheTelegramMessage(user, "agent", response.response, timeNow)
+                    const db_messageObject: Message = {
+                        actor: "agent",
+                        message: response.response,
+                        user_id: user.id,
+                        parent_message_id: parent_message_id,
+                        message_sent_at: timeNow,
+                        session_id: session.id
+                    }
+                    await storeMessage(db_messageObject)
+                    trace.event({ name: "telegram.agent.completed", output: response.response });
+                    trace.update({output: response.response})
+                    logger.info("Telegram Request handle complete", {traceId: trace.id })
+                }
+            }
+
+        } catch (error) {
+            logger.error("Error in Telegram AgentManager", {error: error});
+            await sendTelegramMessage(messageObject.chat.id, "Sorry, I'm having trouble right now", logger, "AgentManager Error");
+            trace.event({ name: "telegram.agent.error", output: { message: error } });
+            return "Sorry, I'm having trouble right now"
         } finally {
             // ensure flush in Vercel
             await langfuse.shutdownAsync();

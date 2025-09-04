@@ -53,7 +53,7 @@ async function testWebhookEndpoint() {
         console.log('Response:', response.data);
     } catch (error) {
         console.error('❌ Webhook endpoint test failed');
-        console.error('Error:', error.response?.data || error.message);
+        console.error('Error:', (error as any).response?.data || (error as any).message);
     }
 }
 
@@ -67,7 +67,7 @@ async function testBotInfo() {
         console.log('Bot:', response.data.result);
     } catch (error) {
         console.error('❌ Bot info test failed');
-        console.error('Error:', error.response?.data || error.message);
+        console.error('Error:', (error as any).response?.data || (error as any).message);
     }
 }
 
@@ -81,7 +81,7 @@ async function testWebhookStatus() {
         console.log('Webhook Info:', response.data.result);
     } catch (error) {
         console.error('❌ Webhook status test failed');
-        console.error('Error:', error.response?.data || error.message);
+        console.error('Error:', (error as any).response?.data || (error as any).message);
     }
 }
 
@@ -97,7 +97,7 @@ async function setWebhook() {
         console.log('Response:', response.data);
     } catch (error) {
         console.error('❌ Failed to set webhook');
-        console.error('Error:', error.response?.data || error.message);
+        console.error('Error:', (error as any).response?.data || (error as any).message);
     }
 }
 
