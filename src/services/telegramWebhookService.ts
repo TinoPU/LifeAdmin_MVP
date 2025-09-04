@@ -26,6 +26,9 @@ const handleTelegramMessage = async (message: TelegramMessage) => {
     }
 
     const telegramUser: TelegramUser = message.from;
+    if (process.env.ALLOWED_TELEGRAM_ID && telegramUser.id !== parseInt(process.env.ALLOWED_TELEGRAM_ID)) {
+        return;
+    }
     const user: User = await fetchTelegramUser(telegramUser);
     const logger = initLogger(user);
     
