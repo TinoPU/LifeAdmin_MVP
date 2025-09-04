@@ -208,7 +208,6 @@ export async function createNewTelegramUser(telegramUser: any) {
         telegram_id: telegramUser.id.toString(),
         name: telegramUser.first_name + (telegramUser.last_name ? ` ${telegramUser.last_name}` : ''),
         user_timezone: 1, // Default timezone, can be updated later
-        language: telegramUser.language_code || 'en'
     }
     const {data, error} = await supabase.from("users").insert([user]).select("*").single();
 
