@@ -63,6 +63,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             props.user.id,
             {
                 toolkits: ["GMAIL"],
+                limit: 23
             }
         );
         span.event({name:"tools found", metadata: tools})
