@@ -15,7 +15,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "@anthropic-ai/sdk": "^0.52.0",
+    "@composio/anthropic": "^0.1.50",
+    "@composio/core": "^0.1.50",
     "@logtail/node": "^0.5.4",
     "@supabase/supabase-js": "^2.49.1",
     "axios": "^1.8.2",

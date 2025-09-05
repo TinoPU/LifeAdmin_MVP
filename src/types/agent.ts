@@ -86,6 +86,8 @@ export interface Agent {
     input: Omit<{role: string, content: string }, "externalId" | "traceIdType">[]
     prompt: ChatPromptClient,
     modelConfig?: modelConfig
+    tools?: any[],
+    type?: string
 }
 
 export interface OrchestratorResponse {
@@ -100,7 +102,7 @@ export interface OrchestratorResponse {
 export interface AgentResponse {
     response?: string,
     reason?: string,
-    data?: string
+    data?: string | null
 }
 
 
