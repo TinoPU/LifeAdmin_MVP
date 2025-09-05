@@ -14,5 +14,5 @@ export const agentFunctionMap: Record<string, (props: AgentProps) => Promise<Age
     [responseAgentCard.name]: ResponseAgent,
     [websearchAgentCard.name]: WebsearchAgent,
     [taskAgentCard.name]: TaskAgent,
-    [emailAgentCard.name]: EmailAgent
+    [emailAgentCard.name]: EmailAgent,
 };

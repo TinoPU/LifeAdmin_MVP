@@ -38,7 +38,8 @@ export async function callAgent(agent:Agent, trace:any) {
             ...defaultModelConfig,
             ...(agent.modelConfig || {}),
             system: systemPrompt,
-            messages: messages
+            messages: messages,
+            ...(agent.tools ? { tools: agent.tools } : {})
         });
 
         if (agent.type == "composio_agent") {
