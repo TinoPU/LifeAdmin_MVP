@@ -97,11 +97,20 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
                     const emailTools = ["GMAIL_FETCH_EMAILS", "GMAIL_LIST_DRAFTS"];
                     if (
                         emailTools.includes(toolSlug)
-                    ) { span.event({name: "afterExecute called", metadata: {
+                    )
+                    { span.event({name: "afterExecute called", metadata: {
                         toolslug: toolSlug, toolkitSlug: toolkitSlug, result: result}
-                        })}
-
-
+                        })
+                        const messages = result?.data?.messages;
+                        if (Array.isArray(messages)) {
+                            result.data.messages = messages.map((msg: any) => ({
+                                messageId: msg.messageId,
+                                sender: msg.sender,
+                                subject: msg.subject,
+                                body: msg.messageText || msg.preview?.body
+                            }));
+                        }
+                    }
                     return result;
                 },
             }
