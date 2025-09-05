@@ -65,6 +65,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
                 toolkits: ["GMAIL"],
             }
         );
+        span.event({name:"tools found", metadata: tools})
 
         /// Context building
         const chatPrompt = await langfuse.getPrompt("EmailAgent", undefined, {
