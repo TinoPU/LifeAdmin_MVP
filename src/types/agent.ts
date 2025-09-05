@@ -102,7 +102,7 @@ export interface OrchestratorResponse {
 export interface AgentResponse {
     response?: string,
     reason?: string,
-    data?: string | null
+    data?: any | null
 }
 
 

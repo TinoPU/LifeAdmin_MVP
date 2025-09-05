@@ -48,7 +48,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             // Return response that tells frontend to redirect user
             const response: AgentResponse = {
                 response: "The User needs to be authenticated to Access this. Redirect them to the URL provided in Data",
-                data: connection.redirectUrl,
+                data: { redirectUrl: connection.redirectUrl },
             };
             props.context.agent_messages.push(
                 `${emailAgentCard.name}: ${JSON.stringify(response)}`
@@ -86,9 +86,13 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             type: "composio_agent"
         }
 
-        const msg =  await callAgent(agent, span)
+        const msg =  await callAgent(agent, span);
         const result = await composio.provider.handleToolCalls(props.user.id, msg);
-        const response = JSON.parse("{response:" + JSON.stringify(result) +"}");
+
+        const response: AgentResponse = {
+            response: "Successful",
+            data: result,
+        };
         props.context.agent_messages.push(`${emailAgentCard.name}: ${JSON.stringify(response)}`)
         span.end({output: response})
         return response
@@ -96,6 +100,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
         span.event({ name: "email.error", output: error instanceof Error ? error.message : String(error)});
         props.context.agentStatus[emailAgentCard.name] = {status: "failed", result: {}}
         span.end({output: "Kann gerade nicht digga"})
-        return {response: "Kann gerade nicht digga"}
+        return { response: "Email agent failed", data: error }
+
     }
 }
