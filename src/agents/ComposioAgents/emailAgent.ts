@@ -87,6 +87,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
         }
 
         const msg =  await callAgent(agent, span);
+        span.event({name: "tool_executed", input: msg})
         const result = await composio.provider.handleToolCalls(props.user.id, msg,{}, // options
             { afterExecute: ({ toolSlug, toolkitSlug, result }) => {
                     const emailTools = ["GMAIL_FETCH_EMAILS", "GMAIL_LIST_DRAFTS"];
