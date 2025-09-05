@@ -81,7 +81,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             input: compiledChatPrompt,
             prompt: chatPrompt,
             modelConfig: {
-                model: "claude-sonnet-4-20250514",
+                model: "claude-opus-4-1-20250805",
                 temperature: 1,
                 max_tokens: 1024
             },
