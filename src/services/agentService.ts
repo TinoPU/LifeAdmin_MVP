@@ -42,7 +42,8 @@ export async function callAgent(agent:Agent, trace:any) {
             ...(agent.tools ? { tools: agent.tools } : {})
         });
 
-        if (agent.type == "composio_agent") {
+        if (agent.type === "composio_agent") {
+            gen.end(({ output: msg}));
             return msg
         }
         const responseText = msg.content
