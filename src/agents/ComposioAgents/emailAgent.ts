@@ -97,9 +97,11 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
                     const emailTools = ["GMAIL_FETCH_EMAILS", "GMAIL_LIST_DRAFTS"];
                     if (
                         emailTools.includes(toolSlug)
-                    ) { span.event({name: "afterExecute called", data: {
+                    ) { span.event({name: "afterExecute called", metadata: {
                         toolslug: toolSlug, toolkitSlug: toolkitSlug, result: result}
                         })}
+
+
                     return result;
                 },
             }
