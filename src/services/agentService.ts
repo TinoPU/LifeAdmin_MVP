@@ -14,7 +14,9 @@ export async function callAgent(agent:Agent, trace:any) {
             ...(agent.modelConfig || {})
         },
         input: agent.input,
-        prompt: agent.prompt
+        prompt: agent.prompt,
+        tools: agent?.tools || "",
+        type: agent?.type || ""
     });
 
     let systemPrompt = "";
@@ -39,6 +41,9 @@ export async function callAgent(agent:Agent, trace:any) {
             messages: messages
         });
 
+        if (agent.type == "composio_agent") {
+            return msg
+        }
         const responseText = msg.content
             .filter(block => block.type === "text")
             .map(block => block.text)

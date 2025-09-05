@@ -1,0 +1,114 @@
+import { AgentCard, ExecutionContext, UserContext, OrchestratorResponse, AgentProps, AgentResponse } from "../../types/agent";
+import { composio } from "../../tools/composioClient";
+import { langfuse } from "../../services/loggingService";
+import {callAgent} from "../../services/agentService";
+
+
+
+export const emailAgentCard: AgentCard = {
+    name: "Email Agent",
+    description: "This Agent handles email tasks and can send emails, read emails, and manage email tasks."
+}
+
+const toolconfig_dict: Record<string, string> = {
+    "GMAIL": "ac_IqSbnGGgCbXh",
+    }
+function getToolConfig(tool: string) {
+    return toolconfig_dict[tool];
+}
+
+/**
+ * EmailAgent: Handles email-related tasks using Composio tools.
+ * Supports sending, reading, and managing emails.
+ * 
+ * @param user_message - The user's message or request.
+ * @param execution_context - The current execution context.
+ * @param history - Conversation history.
+ * @param user_context - User context (contains user info, etc).
+ * @param trace - Tracing object for observability.
+ * @returns OrchestratorResponse
+ */
+
+export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
+{
+    ///Tracing
+    const span = props.trace.span({
+        name: "EmailAgent",
+        input: {
+            user_message: props.user_message,
+            prompt: props.prompt,
+            history: props.history,
+            executionContext: JSON.stringify(props.context),
+        },
+    });
+
+    ///State Update
+    props.context.agentStatus[emailAgentCard.name] = {status: "pending", result: {}}
+
+    try {
+        /// Composio Connection
+        /// Check if user already has a Gmail connection
+        const existingConnections = await composio.connectedAccounts.list({userIds: [props.user.id], toolkitSlugs: ["GMAIL"]
+        });
+
+        if (!existingConnections || existingConnections.items.length === 0) {
+            // No connection yet → initiate OAuth
+            const connection = await composio.connectedAccounts.initiate(
+                props.user.id,
+                getToolConfig("GMAIL"), // your Gmail Auth Config ID
+            );
+            // Return response that tells frontend to redirect user
+            const response: AgentResponse = {
+                response: "The User needs to be authenticated to Access this. Redirect them to the URL provided in Data",
+                data: connection.redirectUrl,
+            };
+            props.context.agent_messages.push(
+                `${emailAgentCard.name}: ${JSON.stringify(response)}`
+            );
+            span.end({ output: response });
+            return response
+        }
+        const tools = await composio.tools.get(
+            props.user.id,
+            {
+                toolkits: ["GMAIL"],
+            }
+        );
+
+        /// Context building
+        const chatPrompt = await langfuse.getPrompt("EmailAgent", undefined, {
+            type: "chat",
+        });
+        const compiledChatPrompt = chatPrompt.compile({
+            user_message: props.user_message,
+            prompt: props.prompt || "",
+        });
+
+        ///Agent Definition
+        const agent = {
+            name: "Email Agent",
+            input: compiledChatPrompt,
+            prompt: chatPrompt,
+            modelConfig: {
+                model: "claude-sonnet-4-20250514",
+                temperature: 1,
+                max_tokens: 1024
+            },
+            tools: tools,
+            type: "composio_agent"
+        }
+
+        const msg =  await callAgent(agent, span)
+        const result = await composio.provider.handleToolCalls(props.user.id, msg);
+        const response = JSON.parse("{response:" + JSON.stringify(result) +"}");
+        props.context.agent_messages.push(`${emailAgentCard.name}: ${JSON.stringify(response)}`)
+        span.end({output: response})
+        return response
+    } catch (error) {
+        span.event({ name: "email.error", output: error instanceof Error ? error.message : String(error)});
+        props.context.agentStatus[emailAgentCard.name] = {status: "failed", result: {}}
+        span.end({output: "Kann gerade nicht digga"})
+        const response: AgentResponse = {response: "Kann gerade nicht digga"}
+        return response
+    }
+}

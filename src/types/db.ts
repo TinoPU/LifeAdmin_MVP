@@ -1,7 +1,7 @@
 export type UUID = string;
 
 export interface User {
-    id?: UUID;
+    id: UUID;
     created_at?: string;
     phone_number?: string;
     wa_user_id?: string
