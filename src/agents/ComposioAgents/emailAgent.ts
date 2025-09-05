@@ -108,12 +108,25 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
                         })
                         const messages = result?.data?.messages;
                         if (Array.isArray(messages)) {
-                            result.data.messages = messages.map((msg: any) => ({
-                                messageId: msg.messageId,
-                                sender: msg.sender,
-                                subject: msg.subject,
-                                body: msg.messageText || msg.preview?.body
-                            }));
+                            const MAX_LENGTH = 2000; // adjust as needed
+
+                            result.data.messages = messages.map((msg: any) => {
+                                let body = msg.messageText || msg.preview?.body || "";
+
+                                // truncate if too long
+                                if (body.length > MAX_LENGTH) {
+                                    body = msg.preview?.body
+                                        ? msg.preview.body
+                                        : body.slice(0, MAX_LENGTH) + "...";
+                                }
+
+                                return {
+                                    messageId: msg.messageId,
+                                    sender: msg.sender,
+                                    subject: msg.subject,
+                                    body
+                                };
+                            })
                         }
                     }
                     return result;
