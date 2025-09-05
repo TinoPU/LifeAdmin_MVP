@@ -88,15 +88,18 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
 
         const msg =  await callAgent(agent, span);
         span.event({name: "tool_executed", input: msg})
-        const result = await composio.provider.handleToolCalls(props.user.id, msg,{}, // options
-            { afterExecute: ({ toolSlug, toolkitSlug, result }) => {
+        const result = await composio.provider.handleToolCalls(
+            props.user.id,
+            msg,
+            {}, // options
+            {
+                afterExecute: ({ toolSlug, toolkitSlug, result }) => {
                     const emailTools = ["GMAIL_FETCH_EMAILS", "GMAIL_LIST_DRAFTS"];
 
                     if (
                         emailTools.includes(toolSlug) &&
                         result.data &&
                         typeof result.data === "object" &&
-                        "content" in result.data &&
                         result.data.content &&
                         Array.isArray((result.data.content as any).messages)
                     ) {
@@ -106,22 +109,22 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
                             subject: item.subject,
                             body: item.preview?.body || "",
                         }));
-
                         return {
                             ...result,
                             data: {
                                 ...result.data,
                                 content: {
-                                    ...result.data.content,
+                                    ...(result.data.content as any),
                                     messages,
                                 },
                             },
                         };
                     }
-
                     return result;
                 },
-            });
+            }
+        );
+
         span.event({name: "tool_executed", output: result})
 
         const response: AgentResponse = {
