@@ -27,7 +27,15 @@ export async function ResponseAgent(props: AgentProps): Promise<AgentResponse> {
         type: "chat",
     });
 
-    const compiled_context = JSON.stringify(props.context.agent_messages, null, 2)
+    const compiled_context = JSON.stringify(props.context.agent_messages.map((msg) => {
+            try {
+                return JSON.parse(msg); // convert string back to object
+            } catch {
+                return msg; // fallback in case it's not valid JSON
+            }
+        }),
+        null,
+        2)
     const compiledChatPrompt = chatPrompt.compile({
         userMessage: props.user_message,
         executionContext: compiled_context,
