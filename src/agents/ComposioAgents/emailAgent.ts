@@ -115,14 +115,12 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
                 },
             }
         );
-
         span.event({name: "tool_executed", output: result})
-
         const response: AgentResponse = {
             response: "Successful",
             data: result,
         };
-        props.context.agent_messages.push(`${emailAgentCard.name}: ${JSON.stringify(response)}`)
+        props.context.agent_messages.push(`${emailAgentCard.name}: ${response}`)
         span.end({output: response})
         return response
     } catch (error) {
