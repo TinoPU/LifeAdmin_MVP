@@ -1,42 +1,26 @@
 import { AgentCard, AgentProps, AgentResponse } from "../../types/agent";
 import { composio } from "../../tools/composioClient";
 import { langfuse } from "../../services/loggingService";
-import { callAgent } from "../../services/agentService";
+import {callAgent} from "../../services/agentService";
 
-// Agent metadata
+
+
 export const emailAgentCard: AgentCard = {
     name: "Email Agent",
-    description:
-        "This Agent handles email tasks and can send emails, read emails, and manage email tasks.",
-};
+    description: "This Agent handles email tasks and can send emails, read emails, and manage email tasks."
+}
 
 const toolconfig_dict: Record<string, string> = {
-    GMAIL: "ac_IqSbnGGgCbXh",
-};
-
+    "GMAIL": "ac_IqSbnGGgCbXh",
+    }
 function getToolConfig(tool: string) {
     return toolconfig_dict[tool];
 }
 
-// After-execute modifier for Gmail emails/drafts
-const afterExecuteModifier = ({ toolSlug, toolkitSlug, result }: { toolSlug: string; toolkitSlug: string; result: any }) => {
-    const emailTools = ["GMAIL_FETCH_EMAILS", "GMAIL_LIST_DRAFTS"];
 
-    if (emailTools.includes(toolSlug) && result?.data?.items) {
-        const filteredItems = result.data.items.map((item: any) => ({
-            messageId: item.id,
-            sender: item.sender,
-            subject: item.subject,
-            body: item.body?.plainText || "",
-        }));
-
-        return { ...result, data: { ...result.data, items: filteredItems } };
-    }
-
-    return result;
-};
-
-export async function EmailAgent(props: AgentProps): Promise<AgentResponse> {
+export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
+{
+    ///Tracing
     const span = props.trace.span({
         name: "EmailAgent",
         input: {
@@ -47,85 +31,91 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse> {
         },
     });
 
-    props.context.agentStatus[emailAgentCard.name] = { status: "pending", result: {} };
-
+    ///State Update
+    props.context.agentStatus[emailAgentCard.name] = {status: "pending", result: {}}
     try {
-        // Check for Gmail connection
-        const existingConnections = await composio.connectedAccounts.list({
-            userIds: [props.user.id],
-            toolkitSlugs: ["GMAIL"],
+        /// Composio Connection
+        /// Check if user already has a Gmail connection
+        const existingConnections = await composio.connectedAccounts.list({userIds: [props.user.id], toolkitSlugs: ["GMAIL"]
         });
 
         if (!existingConnections || existingConnections.items.length === 0) {
+            // No connection yet → initiate OAuth
             const connection = await composio.connectedAccounts.initiate(
                 props.user.id,
-                getToolConfig("GMAIL")
+                getToolConfig("GMAIL"), // your Gmail Auth Config ID
             );
-
+            // Return response that tells frontend to redirect user
             const response: AgentResponse = {
-                response:
-                    "The User needs to be authenticated to Access this. Redirect them to the URL provided in Data",
+                response: "The User needs to be authenticated to Access this. Redirect them to the URL provided in Data",
                 data: { redirectUrl: connection.redirectUrl },
             };
-
             props.context.agent_messages.push(
                 `${emailAgentCard.name}: ${JSON.stringify(response)}`
             );
             span.end({ output: response });
-            return response;
+            return response
         }
+        const tools = await composio.tools.get(
+            props.user.id,
+            {
+                toolkits: ["GMAIL"],
+            }
+        );
 
-        // Fetch Gmail tools (no afterExecute here for Anthropic)
-        const tools = await composio.tools.get(props.user.id, {
-            toolkits: ["GMAIL"],
+        /// Context building
+        const chatPrompt = await langfuse.getPrompt("EmailAgent", undefined, {
+            type: "chat",
         });
-
-        // Build chat prompt
-        const chatPrompt = await langfuse.getPrompt("EmailAgent", undefined, { type: "chat" });
         const compiledChatPrompt = chatPrompt.compile({
             user_message: props.user_message,
             prompt: props.prompt || "",
         });
 
-        // Call the agent
+        ///Agent Definition
         const agent = {
             name: "Email Agent",
             input: compiledChatPrompt,
             prompt: chatPrompt,
             modelConfig: {
-                model: "claude-2", // Anthropic model
+                model: "claude-sonnet-4-20250514",
                 temperature: 1,
-                max_tokens: 1024,
+                max_tokens: 1024
             },
             tools: tools,
-            type: "composio_agent",
-        };
+            type: "composio_agent"
+        }
 
-        const msg = await callAgent(agent, span);
-
-        // Run tool calls and apply the modifier
-        const result = await composio.provider.handleToolCalls(props.user.id, msg, {},{afterExecute: afterExecuteModifier});
-
-        span.event({ name: "tool_executed", output: result });
+        const msg =  await callAgent(agent, span);
+        const result = await composio.provider.handleToolCalls(props.user.id, msg,{}, // options
+            { afterExecute: ({ toolSlug, result }) => {
+                    const emailTools = ["GMAIL_FETCH_EMAILS", "GMAIL_LIST_DRAFTS"];
+                    if (emailTools.includes(toolSlug) && result?.data?.items && Array.isArray(result.data.items)) {
+                        const filteredItems = result.data.items.map((item: any) => ({
+                            messageId: item.id,
+                            sender: item.sender,
+                            subject: item.subject,
+                            body: item.body?.plainText || "",
+                        }));
+                        return { ...result, data: { ...result.data, items: filteredItems } };
+                    }
+                    return result;
+                },
+            });
+        span.event({name: "tool_executed", output: result})
 
         const response: AgentResponse = {
             response: "Successful",
             data: result,
         };
-
-        props.context.agent_messages.push(
-            `${emailAgentCard.name}: ${JSON.stringify(response)}`
-        );
-        span.end({ output: response });
-        return response;
-
+        props.context.agent_messages.push(`${emailAgentCard.name}: ${JSON.stringify(response)}`)
+        span.end({output: response})
+        return response
     } catch (error) {
-        span.event({
-            name: "email.error",
-            output: error instanceof Error ? error.message : String(error),
-        });
-        props.context.agentStatus[emailAgentCard.name] = { status: "failed", result: {} };
-        span.end({ output: "Kann gerade nicht digga" });
-        return { response: "Email agent failed", data: error };
+        span.event({ name: "email.error", output: error instanceof Error ? error.message : String(error)});
+        props.context.agentStatus[emailAgentCard.name] = {status: "failed", result: {}}
+        span.end({output: "Kann gerade nicht digga"})
+        return { response: "Email agent failed", data: error }
+
     }
 }
