@@ -17,7 +17,7 @@ export async function ResponseAgent(props: AgentProps): Promise<AgentResponse> {
             user_message: props.user_message,
             prompt: props.prompt,
             history: props.history,
-            executionContext: JSON.stringify(props.context)
+            executionContext: props.context
 
         },
     });

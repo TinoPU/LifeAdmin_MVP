@@ -51,7 +51,10 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
                 data: { redirectUrl: connection.redirectUrl },
             };
             props.context.agent_messages.push(
-                `${emailAgentCard.name}: ${JSON.stringify(response)}`
+                JSON.stringify({
+                    agent: emailAgentCard.name,
+                    response: response
+                }, null, 2)
             );
             span.end({ output: response });
             return response
