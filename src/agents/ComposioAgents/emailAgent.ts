@@ -1,4 +1,4 @@
-import { AgentCard, ExecutionContext, UserContext, OrchestratorResponse, AgentProps, AgentResponse } from "../../types/agent";
+import { AgentCard, AgentProps, AgentResponse } from "../../types/agent";
 import { composio } from "../../tools/composioClient";
 import { langfuse } from "../../services/loggingService";
 import {callAgent} from "../../services/agentService";
@@ -17,17 +17,6 @@ function getToolConfig(tool: string) {
     return toolconfig_dict[tool];
 }
 
-/**
- * EmailAgent: Handles email-related tasks using Composio tools.
- * Supports sending, reading, and managing emails.
- * 
- * @param user_message - The user's message or request.
- * @param execution_context - The current execution context.
- * @param history - Conversation history.
- * @param user_context - User context (contains user info, etc).
- * @param trace - Tracing object for observability.
- * @returns OrchestratorResponse
- */
 
 export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
 {
@@ -44,7 +33,6 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
 
     ///State Update
     props.context.agentStatus[emailAgentCard.name] = {status: "pending", result: {}}
-
     try {
         /// Composio Connection
         /// Check if user already has a Gmail connection
@@ -108,7 +96,6 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
         span.event({ name: "email.error", output: error instanceof Error ? error.message : String(error)});
         props.context.agentStatus[emailAgentCard.name] = {status: "failed", result: {}}
         span.end({output: "Kann gerade nicht digga"})
-        const response: AgentResponse = {response: "Kann gerade nicht digga"}
-        return response
+        return {response: "Kann gerade nicht digga"}
     }
 }
