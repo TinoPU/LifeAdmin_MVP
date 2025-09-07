@@ -133,6 +133,28 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
                 },
             }
         );
+
+        const normalizeContent = (res: any) => {
+            if (Array.isArray(res)) {
+                res.forEach(r => normalizeContent(r));
+            } else if (res && typeof res === "object") {
+                for (const key in res) {
+                    if (typeof res[key] === "string") {
+                        try {
+                            const parsed = JSON.parse(res[key]);
+                            res[key] = parsed; // replace with parsed object
+                        } catch {
+                            // not valid JSON string, leave it alone
+                        }
+                    } else {
+                        normalizeContent(res[key]);
+                    }
+                }
+            }
+        };
+
+        normalizeContent(result);
+
         span.event({name: "tool_executed", output: result})
         const response: AgentResponse = {
             response: "Successful",
