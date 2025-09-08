@@ -6,37 +6,35 @@ import {ComposioUtils} from "../../utils/agentUtils";
 
 
 
-export const emailAgentCard: AgentCard = {
-    name: "Email Agent",
-    description: "This Agent handles email tasks and can send emails, read emails, and manage email tasks."
+export const notionAgentCard: AgentCard = {
+    name: "Notion Agent",
+    description: "This Agent can interact with the users Notion"
 }
 
-export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
+export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
 {
     ///Tracing
     const span = props.trace.span({
-        name: "EmailAgent",
+        name: "NotionAgent",
         input: {
             user_message: props.user_message,
             prompt: props.prompt,
-            history: props.history,
-            executionContext: JSON.stringify(props.context),
         },
     });
 
     ///State Update
-    props.context.agentStatus[emailAgentCard.name] = {status: "pending", result: {}}
+    props.context.agentStatus[notionAgentCard.name] = {status: "pending", result: {}}
     try {
         /// Composio Connection
         /// Check if user already has a Gmail connection
-        const existingConnections = await composio.connectedAccounts.list({userIds: [props.user.id], toolkitSlugs: ["GMAIL"]
+        const existingConnections = await composio.connectedAccounts.list({userIds: [props.user.id], toolkitSlugs: ["NOTION"]
         });
 
         if (!existingConnections || existingConnections.items.length === 0) {
             // No connection yet → initiate OAuth
             const connection = await composio.connectedAccounts.initiate(
                 props.user.id,
-                ComposioUtils.getToolConfig("GMAIL"), // your Gmail Auth Config ID
+                ComposioUtils.getToolConfig("NOTION"), // your Gmail Auth Config ID
             );
             // Return response that tells frontend to redirect user
             const response: AgentResponse = {
@@ -45,7 +43,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             };
             props.context.agent_messages.push(
                 JSON.stringify({
-                    agent: emailAgentCard.name,
+                    agent: notionAgentCard.name,
                     response: response
                 }, null, 2)
             );
@@ -55,14 +53,14 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
         const tools = await composio.tools.get(
             props.user.id,
             {
-                toolkits: ["GMAIL"],
+                toolkits: ["NOTION"],
                 limit: 23
             }
         );
         span.event({name:"tools found", metadata: tools})
 
         /// Context building
-        const chatPrompt = await langfuse.getPrompt("EmailAgent", undefined, {
+        const chatPrompt = await langfuse.getPrompt("NotionAgent", undefined, {
             type: "chat",
         });
         const compiledChatPrompt = chatPrompt.compile({
@@ -72,7 +70,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
 
         ///Agent Definition
         const agent = {
-            name: "Email Agent",
+            name: "Notion Agent",
             input: compiledChatPrompt,
             prompt: chatPrompt,
             modelConfig: {
@@ -92,9 +90,9 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             {}, // options
             {
                 afterExecute: ({ toolSlug, toolkitSlug, result }) => {
-                    const emailTools = ["GMAIL_FETCH_EMAILS", "GMAIL_LIST_DRAFTS"];
+                    const notionTools = [""];
                     if (
-                        emailTools.includes(toolSlug)
+                        notionTools.includes(toolSlug)
                     )
                     { span.event({name: "afterExecute called", metadata: {
                         toolslug: toolSlug, toolkitSlug: toolkitSlug, result: result}
@@ -154,17 +152,17 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             data: result,
         };
         props.context.agent_messages.push(JSON.stringify({
-            agent: emailAgentCard.name,
+            agent: notionAgentCard.name,
             response: response
         }, null, 2))
 
         span.end({output: response})
         return response
     } catch (error) {
-        span.event({ name: "email.error", output: error instanceof Error ? error.message : String(error)});
-        props.context.agentStatus[emailAgentCard.name] = {status: "failed", result: {}}
+        span.event({ name: "notion.error", output: error instanceof Error ? error.message : String(error)});
+        props.context.agentStatus[notionAgentCard.name] = {status: "failed", result: {}}
         span.end({output: "Kann gerade nicht digga"})
-        return { response: "Email agent failed", data: error }
+        return { response: "Notion agent failed", data: error }
 
     }
 }

@@ -27,3 +27,16 @@ export function constructExecutionContext(): ExecutionContext {
         agentStatus: {}
     }
 }
+
+
+export class ComposioUtils {
+    private static toolconfig_dict: Record<string, string> = {
+        GMAIL: "ac_IqSbnGGgCbXh",
+        NOTION: "ac_yQJRcnWZouqe"
+    };
+
+    public static getToolConfig(tool: string, defaultValue: string = "NOT_FOUND"): string {
+        return this.toolconfig_dict[tool] ?? defaultValue;
+    }
+}
+
