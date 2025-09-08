@@ -30,11 +30,11 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
         const existingConnections = await composio.connectedAccounts.list({userIds: [props.user.id], toolkitSlugs: ["NOTION"]
         });
 
-        if (!existingConnections || existingConnections.items.length === 0) {
+        if (!existingConnections || existingConnections.items.length === 0) { ///#TODO: Check for active connections instead!!
             // No connection yet → initiate OAuth
             const connection = await composio.connectedAccounts.initiate(
                 props.user.id,
-                ComposioUtils.getToolConfig("NOTION"), // your Gmail Auth Config ID
+                ComposioUtils.getToolConfig("NOTION"),
             );
             // Return response that tells frontend to redirect user
             const response: AgentResponse = {
@@ -54,7 +54,6 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
             props.user.id,
             {
                 toolkits: ["NOTION"],
-                limit: 23
             }
         );
         span.event({name:"tools found", metadata: tools})
