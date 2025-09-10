@@ -85,7 +85,6 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
         }
 
         const msg =  await callAgent(agent, span);
-        span.event({name: "tool_executed", input: msg})
         const result = await composio.provider.handleToolCalls(
             props.user.id,
             msg,
@@ -148,7 +147,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
 
         normalizeContent(result);
 
-        span.event({name: "tool_executed", output: result})
+        span.event({name: "tool_called", input: msg, output: result})
         const response: AgentResponse = {
             response: "Successful",
             data: result,
@@ -157,7 +156,6 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             agent: emailAgentCard.name,
             response: response
         }, null, 2))
-
         span.end({output: response})
         return response
     } catch (error) {

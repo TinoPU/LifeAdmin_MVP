@@ -81,48 +81,26 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
             type: "composio_agent"
         }
 
-        const msg =  await callAgent(agent, span);
-        span.event({name: "tool_executed", input: msg})
-        const result = await composio.provider.handleToolCalls(
-            props.user.id,
-            msg,
-            {}, // options
-            {
-                afterExecute: ({ toolSlug, toolkitSlug, result }) => {
-                    const notionTools = [""];
-                    if (
-                        notionTools.includes(toolSlug)
-                    )
-                    { span.event({name: "afterExecute called", metadata: {
-                        toolslug: toolSlug, toolkitSlug: toolkitSlug, result: result}
-                        })
-                        const messages = result?.data?.messages;
-                        if (Array.isArray(messages)) {
-                            const MAX_LENGTH = 2000; // adjust as needed
-
-                            result.data.messages = messages.map((msg: any) => {
-                                let body = msg.messageText || msg.preview?.body || "";
-
-                                // truncate if too long
-                                if (body.length > MAX_LENGTH) {
-                                    body = msg.preview?.body
-                                        ? msg.preview.body
-                                        : body.slice(0, MAX_LENGTH) + "...";
-                                }
-
-                                return {
-                                    messageId: msg.messageId,
-                                    sender: msg.sender,
-                                    subject: msg.subject,
-                                    body
-                                };
-                            })
-                        }
-                    }
-                    return result;
-                },
+        let continue_conversation = undefined
+        let iteration = 0
+        let stop_reason = ""
+        let result = undefined
+        const break_reasons = ["end_turn", "max_tokens", "stop_sequence", "pause_turn", "refusal"]
+        while (!break_reasons.includes(stop_reason) && iteration <5) {
+            const msg = await callAgent(agent, span, continue_conversation);
+            iteration += 1
+            stop_reason = msg.stop_reason
+            result = await composio.provider.handleToolCalls(
+                props.user.id,
+                msg);
+            span.event({name: "tool_called", input: msg, output: result})
+            if (stop_reason == "tool_use") {
+                continue_conversation = [
+                    {role: "assistant" as const, content: msg.content[0]?.text || ""},
+                    {role: "user" as const , content: JSON.stringify(result, null, 2) || ""}
+                ];
             }
-        );
+        }
 
         const normalizeContent = (res: any) => {
             if (Array.isArray(res)) {
@@ -145,7 +123,6 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
 
         normalizeContent(result);
 
-        span.event({name: "tool_executed", output: result})
         const response: AgentResponse = {
             response: "Successful",
             data: result,

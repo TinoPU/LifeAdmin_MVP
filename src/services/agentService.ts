@@ -1,10 +1,11 @@
 import {defaultModelConfig} from "../config/modelConfig";
-import {Agent} from "../types/agent";
+import {Agent, AgentMessage} from "../types/agent";
 import Anthropic from "@anthropic-ai/sdk";
+
 
 const anthropic = new Anthropic();
 
-export async function callAgent(agent:Agent, trace:any) {
+export async function callAgent(agent:Agent, trace:any, continue_conversation?:AgentMessage[]) {
 
     const gen = trace.generation({
         name: `${agent.name}.call`,
@@ -30,6 +31,12 @@ export async function callAgent(agent:Agent, trace:any) {
                 role: m.role === "user" ? "user" : "assistant",
                 content: m.content,
             });
+        }
+    }
+
+    if (continue_conversation) {
+        for (const message of continue_conversation) {
+            messages.push(message)
         }
     }
 

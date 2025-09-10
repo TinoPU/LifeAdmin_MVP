@@ -114,3 +114,8 @@ export interface AgentProps {
     prompt?: string,
     trace: any
 }
+
+export interface AgentMessage {
+    role: "user" | "assistant",
+    content: string
+}
