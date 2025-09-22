@@ -7,19 +7,6 @@ const anthropic = new Anthropic();
 
 export async function callAgent(agent:Agent, trace:any, continue_conversation?:AgentMessage[]) {
 
-    const gen = trace.generation({
-        name: `${agent.name}.call`,
-        model: agent.modelConfig?.model || defaultModelConfig.model,
-        modelParameters: {
-            ...defaultModelConfig,
-            ...(agent.modelConfig || {})
-        },
-        input: agent.input,
-        prompt: agent.prompt,
-        tools: agent?.tools || "",
-        type: agent?.type || ""
-    });
-
     let systemPrompt = "";
     const messages: { role: "user" | "assistant"; content: string }[] = [];
 
@@ -39,6 +26,19 @@ export async function callAgent(agent:Agent, trace:any, continue_conversation?:A
             messages.push(message)
         }
     }
+
+    const gen = trace.generation({
+        name: `${agent.name}.call`,
+        model: agent.modelConfig?.model || defaultModelConfig.model,
+        modelParameters: {
+            ...defaultModelConfig,
+            ...(agent.modelConfig || {})
+        },
+        input: messages,
+        prompt: agent.prompt,
+        tools: agent?.tools || "",
+        type: agent?.type || ""
+    });
 
     try {
         const msg = await anthropic.messages.create({
