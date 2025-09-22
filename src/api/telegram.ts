@@ -9,8 +9,8 @@ const router = express.Router();
 router.post("/", async (req: Request, res: Response) => {
     try {
         const body: TelegramIncomingObject = req.body;
-        await handleIncomingTelegramWebhook(body);
         res.status(200).send({ status: "Message accepted for processing" });
+        await handleIncomingTelegramWebhook(body);
     }
     catch (err) {
         const body: TelegramIncomingObject = req.body;
