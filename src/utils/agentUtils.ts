@@ -28,23 +28,27 @@ export function constructExecutionContext(): ExecutionContext {
     }
 }
 
-export const normalizeContent = (res: any) => {
+export const normalizeContent = (res: any): any => {
     if (Array.isArray(res)) {
-        res.forEach(r => normalizeContent(r));
+        return res.map(r => normalizeContent(r));
     } else if (res && typeof res === "object") {
+        const copy: any = Array.isArray(res) ? [] : { ...res };
         for (const key in res) {
-            if (typeof res[key] === "string") {
+            const val = res[key];
+            if (typeof val === "string") {
                 try {
-                    const parsed = JSON.parse(res[key]);
-                    res[key] = parsed; // replace with parsed object
+                    copy[key] = JSON.parse(val);
                 } catch {
-                    // not valid JSON string, leave it alone
+                    copy[key] = val;
                 }
             } else {
-                normalizeContent(res[key]);
+                copy[key] = normalizeContent(val);
             }
         }
+        return copy;
     }
+    // primitive values
+    return res;
 };
 
 
