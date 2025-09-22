@@ -26,7 +26,7 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
     props.context.agentStatus[notionAgentCard.name] = {status: "pending", result: {}}
     try {
         /// Composio Connection
-        /// Check if user already has a Gmail connection
+        /// Check if user already has a connection
         const existingConnections = await composio.connectedAccounts.list({userIds: [props.user.id], toolkitSlugs: ["NOTION"]
         });
 
@@ -81,7 +81,7 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
             type: "composio_agent"
         }
 
-        const result = ComposioExecuter(agent, props, span)
+        const result = await ComposioExecuter(agent, props, span)
 
         const response: AgentResponse = {
             response: "Successful",
