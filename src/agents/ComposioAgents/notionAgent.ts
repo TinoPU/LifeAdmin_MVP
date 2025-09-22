@@ -1,8 +1,8 @@
 import { AgentCard, AgentProps, AgentResponse } from "../../types/agent";
 import { composio } from "../../tools/composioClient";
 import { langfuse } from "../../services/loggingService";
-import {callAgent} from "../../services/agentService";
 import {ComposioUtils} from "../../utils/agentUtils";
+import ComposioExecuter from "./composioExecuter";
 
 
 
@@ -81,47 +81,7 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
             type: "composio_agent"
         }
 
-        let continue_conversation = undefined
-        let iteration = 0
-        let stop_reason = ""
-        let result = undefined
-        const break_reasons = ["end_turn", "max_tokens", "stop_sequence", "pause_turn", "refusal"]
-        while (!break_reasons.includes(stop_reason) && iteration <5) {
-            const msg = await callAgent(agent, span, continue_conversation);
-            iteration += 1
-            stop_reason = msg.stop_reason
-            result = await composio.provider.handleToolCalls(
-                props.user.id,
-                msg);
-            span.event({name: "tool_called", input: msg, output: result})
-            if (stop_reason == "tool_use") {
-                continue_conversation = [
-                    {role: "assistant" as const, content: msg.content[0]?.text || ""},
-                    {role: "user" as const , content: JSON.stringify(result, null, 2) || ""}
-                ];
-            }
-        }
-
-        const normalizeContent = (res: any) => {
-            if (Array.isArray(res)) {
-                res.forEach(r => normalizeContent(r));
-            } else if (res && typeof res === "object") {
-                for (const key in res) {
-                    if (typeof res[key] === "string") {
-                        try {
-                            const parsed = JSON.parse(res[key]);
-                            res[key] = parsed; // replace with parsed object
-                        } catch {
-                            // not valid JSON string, leave it alone
-                        }
-                    } else {
-                        normalizeContent(res[key]);
-                    }
-                }
-            }
-        };
-
-        normalizeContent(result);
+        const result = ComposioExecuter(agent, props, span)
 
         const response: AgentResponse = {
             response: "Successful",
