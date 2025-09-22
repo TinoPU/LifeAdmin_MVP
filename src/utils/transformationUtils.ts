@@ -61,3 +61,23 @@ export function formatDate(input: string): string {
     return `[${datePart}, ${timePart}]`;
 }
 
+export function formatGmailMessages(result: any) {
+    const messages = result?.data?.messages;
+    if (Array.isArray(messages)) {
+        const MAX_LENGTH = 2000;
+        result.data.messages = messages.map((msg: any) => {
+            let body = msg.messageText || msg.preview?.body || "";
+            if (body.length > MAX_LENGTH) {
+                body = msg.preview?.body ? msg.preview.body : body.slice(0, MAX_LENGTH) + "...";
+            }
+            return {
+                messageId: msg.messageId,
+                sender: msg.sender,
+                subject: msg.subject,
+                body,
+            };
+        });
+    }
+    return result;
+}
+

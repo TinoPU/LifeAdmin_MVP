@@ -1,8 +1,8 @@
 import { AgentCard, AgentProps, AgentResponse } from "../../types/agent";
 import { composio } from "../../tools/composioClient";
 import { langfuse } from "../../services/loggingService";
-import {callAgent} from "../../services/agentService";
-import {ComposioUtils, normalizeContent} from "../../utils/agentUtils";
+import {ComposioUtils} from "../../utils/agentUtils";
+import ComposioExecuter from "./composioExecuter";
 
 
 
@@ -84,51 +84,8 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             type: "composio_agent"
         }
 
-        const msg =  await callAgent(agent, span);
-        const result = await composio.provider.handleToolCalls(
-            props.user.id,
-            msg,
-            {}, // options
-            {
-                afterExecute: ({ toolSlug, toolkitSlug, result }) => {
-                    const emailTools = ["GMAIL_FETCH_EMAILS", "GMAIL_LIST_DRAFTS"];
-                    if (
-                        emailTools.includes(toolSlug)
-                    )
-                    { span.event({name: "afterExecute called", metadata: {
-                        toolslug: toolSlug, toolkitSlug: toolkitSlug, result: result}
-                        })
-                        const messages = result?.data?.messages;
-                        if (Array.isArray(messages)) {
-                            const MAX_LENGTH = 2000; // adjust as needed
+        const result = await ComposioExecuter(agent, props, span)
 
-                            result.data.messages = messages.map((msg: any) => {
-                                let body = msg.messageText || msg.preview?.body || "";
-
-                                // truncate if too long
-                                if (body.length > MAX_LENGTH) {
-                                    body = msg.preview?.body
-                                        ? msg.preview.body
-                                        : body.slice(0, MAX_LENGTH) + "...";
-                                }
-
-                                return {
-                                    messageId: msg.messageId,
-                                    sender: msg.sender,
-                                    subject: msg.subject,
-                                    body
-                                };
-                            })
-                        }
-                    }
-                    return result;
-                },
-            }
-        );
-
-        normalizeContent(result);
-
-        span.event({name: "tool_called", input: msg, output: result})
         const response: AgentResponse = {
             response: "Successful",
             data: result,
