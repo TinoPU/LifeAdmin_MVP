@@ -22,30 +22,40 @@ export default async function ComposioExecuter(agent: Agent, props: AgentProps, 
         const msg = await callAgent(agent, span, continue_conversation);
         iteration += 1
         stop_reason = msg.stop_reason
-        result = await composio.provider.handleToolCalls(
-            props.user.id,
-            msg,
-            {},
-            {
-                afterExecute: ({ toolSlug, toolkitSlug, result }) => {
-                    const handler = afterExecuteHandlers[toolSlug];
-                    if (handler) {
-                        { span.event({name: "afterExecute called", metadata: {
-                                toolSlug: toolSlug, toolkitSlug: toolkitSlug, result: result}
-                        })
-                        }
-                        result = handler(result);
-                    }
-                    return result;
-                },
-            });
-        span.event({name: "tool_called", input: msg, output: result})
-        if (stop_reason == "tool_use") {
-            continue_conversation = [
-                {role: "assistant" as const, content: msg.content[0]?.text || ""},
-                {role: "user" as const , content: JSON.stringify(result, null, 2) || ""}
-            ];
+
+        const assistantText = msg.content?.[0]?.text;
+        if (assistantText) {
+            result = assistantText;  // <── Save latest assistant output
         }
+
+        if (stop_reason == "tool_use") {
+            result = await composio.provider.handleToolCalls(
+                props.user.id,
+                msg,
+                {},
+                {
+                    afterExecute: ({toolSlug, toolkitSlug, result}) => {
+                        const handler = afterExecuteHandlers[toolSlug];
+                        if (handler) {
+                            {
+                                span.event({
+                                    name: "afterExecute called", metadata: {
+                                        toolSlug: toolSlug, toolkitSlug: toolkitSlug, result: result
+                                    }
+                                })
+                            }
+                            result = handler(result);
+                        }
+                        return result;
+                    },
+                });
+
+                span.event({name: "tool_called", input: msg, output: result})
+                continue_conversation = [
+                    {role: "assistant" as const, content: msg.content[0]?.text || ""},
+                    {role: "user" as const, content: JSON.stringify(result, null, 2) || ""}
+                ];
+            }
     }
 
     return normalizeContent(result);
