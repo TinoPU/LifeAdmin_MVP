@@ -24,9 +24,15 @@ export async function OrchestratorAgent(user_message: string, execution_context:
         type: "chat",
     });
 
+    let artifacts = await getArtifacts(execution_context.user_id as string, orchestratorAgentCard.name)
+    console.log("artifacts in agent: ", artifacts)
+    let clean_artifacts = cleanStringList(artifacts)
+    console.log("cleanded artifacts string: ", clean_artifacts)
+
+
     const compiledChatPrompt = chatPrompt.compile({
         userMessage: user_message,
-        execution_context: cleanStringList(await getArtifacts(execution_context.user_id as string, orchestratorAgentCard.name)),
+        execution_context: clean_artifacts,
         agents: availableAgents(),
         history: JSON.stringify(history, null,2),
         user_context: JSON.stringify(user_context, null, 2)
