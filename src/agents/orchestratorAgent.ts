@@ -32,7 +32,7 @@ export async function OrchestratorAgent(user_message: string, execution_context:
 
     const compiledChatPrompt = chatPrompt.compile({
         userMessage: user_message,
-        execution_context: clean_artifacts,
+        execution_context: `>>>${artifacts}<<<`,
         agents: availableAgents(),
         history: JSON.stringify(history, null,2),
         user_context: JSON.stringify(user_context, null, 2)
