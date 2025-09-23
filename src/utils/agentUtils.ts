@@ -5,6 +5,7 @@ import {constructTaskContext} from "./taskUtils";
 import {uuid} from "@supabase/supabase-js/dist/main/lib/helpers";
 import {Artifact, Step} from "../types/artifacts";
 import {cacheArtifact, getArtifactsFromCache} from "./redisActions";
+import {logger} from "@composio/core";
 
 
 export async function constructContext(user:User) {
@@ -93,6 +94,7 @@ export function addArtifactStep (artifact: Artifact, step:Step) {
 
 export function storeArtifact (artifact:Artifact) {
     cacheArtifact(artifact).then(r => {})
+    logger.info("artifact Stored", {artifact: artifact})
 }
 
 export async function getArtifacts (user_id: string, agent_name: string) {
