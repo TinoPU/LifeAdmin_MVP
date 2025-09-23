@@ -67,6 +67,7 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
         const compiledChatPrompt = chatPrompt.compile({
             user_message: props.user_message,
             prompt: props.prompt || "",
+            executionContext: cleanStringList(await getArtifacts(props.user.id as string, notionAgentCard.name)),
         });
 
         ///Agent Definition
