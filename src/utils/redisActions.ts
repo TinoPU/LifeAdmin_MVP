@@ -35,5 +35,6 @@ export async function cacheArtifact(artifact: Artifact) {
 export async function getArtifactsFromCache (agent_name:string, user_id:string){
     const redisKey: string = `artifact:${agent_name}:${user_id}`
     console.log("getting redis with: ", redisKey) ///TODO: Remove this log
+    const artifacts = await redisClient.lRange(redisKey, 0, 3);
     return await redisClient.lRange(redisKey, 0, 3);
 }
