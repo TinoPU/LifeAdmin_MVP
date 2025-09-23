@@ -32,7 +32,7 @@ export interface ExecutionContext {
     id: UUID,
     agent_messages: string[],
     session_id?: UUID,
-    user_id?: UUID,
+    user_id: UUID,
     execution_start: string,
     execution_end?: string,
     status: string,

@@ -2,6 +2,11 @@ import {Agent, AgentCard, ExecutionContext, OrchestratorResponse, UserContext} f
 import {langfuse} from "../services/loggingService";
 import {availableAgents} from "./agentRegistry";
 import {callAgent} from "../services/agentService";
+import {getArtifacts, storeArtifact} from "../utils/agentUtils";
+import {Artifact} from "../types/artifacts";
+import {uuid} from "@supabase/supabase-js/dist/main/lib/helpers";
+import {UUID} from "../types/db";
+import {cleanStringList} from "../utils/transformationUtils";
 
 export const orchestratorAgentCard: AgentCard = {
     name: "Orchestrator Agent",
@@ -19,14 +24,14 @@ export async function OrchestratorAgent(user_message: string, execution_context:
         type: "chat",
     });
 
-    const compiled_context = JSON.stringify(execution_context.agent_messages, null, 2)
     const compiledChatPrompt = chatPrompt.compile({
         userMessage: user_message,
-        execution_context: compiled_context,
+        execution_context: cleanStringList(await getArtifacts(execution_context.user_id as string, orchestratorAgentCard.name)),
         agents: availableAgents(),
         history: JSON.stringify(history, null,2),
         user_context: JSON.stringify(user_context, null, 2)
     });
+
 
     const agent: Agent = {
         name: "Orchestrator Agent",
@@ -38,10 +43,24 @@ export async function OrchestratorAgent(user_message: string, execution_context:
             max_tokens: 4096
         }}
 
+    let artifact: Artifact = {
+        id: uuid(),
+        status: "pending",
+        agent_name: agent.name,
+        input: user_message,
+        created_at: new Date().toISOString(),
+        user_id: execution_context.user_id as UUID,
+        traceId: trace.id,
+        sub_artifacts: [],
+        final_output: undefined
+    }
+
     try {
         const orchestrator_response: OrchestratorResponse =  await callAgent(agent, span)
         execution_context.agentStatus[orchestratorAgentCard.name] = {status: "success", result: orchestrator_response.agents}
         span.end({output: orchestrator_response})
+        artifact.final_output = orchestrator_response
+        storeArtifact(artifact)
         return orchestrator_response
     } catch (error) {
         span.event({ name: "orchestration.error", output: error });

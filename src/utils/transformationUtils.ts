@@ -81,3 +81,7 @@ export function formatGmailMessages(result: any) {
     return result;
 }
 
+export function cleanStringList(input: string | string[]): string {
+    return Array.isArray(input) ? input.join("\n") : input;
+}
+

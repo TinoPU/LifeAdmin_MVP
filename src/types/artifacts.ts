@@ -9,33 +9,29 @@ export interface Event {
 }
 
 export interface Step {
-    id: string;
-    iteration: number;
-    type: string;
+    id: number;
+    type: "tool_use" | "agent";
     name?: string;
-    query: string;
-    resultSummary: string; // summarized/truncated result
-    fullResultRef?: string; // optional pointer to raw log or S3 file
+    input?: string;
     executedAt?: string;
     status?: "pending" | "success" | "failed";
+    output: Record<string, any> | string;
 }
 
 export interface Artifact {
     id: UUID;
-    version: string; // e.g. "v1"
-    type: string;
-    name: string;
-    query: string;
+    parent_artifact_id?: UUID
+    agent_name: string;
+    input?: string;
+    status: "pending"| "in_progress" | "completed" | "failed" | "cancelled"
     created_at: string;
     user_id: UUID;
-    platform: "whatsapp" | "telegram" | "other";
-    agent?: string;
-    orchestratorSummary?: string; // brief of which agents/tasks chosen
-    traceId?: string; // link to Langfuse trace
+    traceId: string; // link to Langfuse trace
     parent_message_id?: string;
     session_id?: string;
     events?: Event[];
     steps?: Step[];
-    finalResult?: string; // summarized final response
+    sub_artifacts: Artifact[]
+    final_output?: Record<string, any> | string;
     metadata?: Record<string, any>; // flexible for future needs
 }

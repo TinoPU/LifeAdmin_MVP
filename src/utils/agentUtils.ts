@@ -1,8 +1,10 @@
-import {AgentContext, ExecutionContext} from "../types/agent";
+import {Agent, AgentContext, AgentProps, ExecutionContext} from "../types/agent";
 import {constructUserContext} from "./userUtils";
 import {User} from "../types/db";
 import {constructTaskContext} from "./taskUtils";
 import {uuid} from "@supabase/supabase-js/dist/main/lib/helpers";
+import {Artifact, Step} from "../types/artifacts";
+import {cacheArtifact, getArtifactsFromCache} from "./redisActions";
 
 
 export async function constructContext(user:User) {
@@ -20,6 +22,7 @@ export async function constructContext(user:User) {
 export function constructExecutionContext(): ExecutionContext {
     return {
         id: uuid(),
+        user_id: "",
         agent_messages: [],
         execution_start: new Date().toISOString(),
         status: "Started",
@@ -63,3 +66,35 @@ export class ComposioUtils {
     }
 }
 
+export function createArtifact(agent: Agent, props: AgentProps): Artifact {
+    return {
+        id: uuid(),
+        agent_name: agent.name,
+        input: props.prompt,
+        status: "pending" as const,
+        created_at: new Date().toISOString(),
+        user_id: props.user.id,
+        traceId: props.trace.id,
+        parent_message_id: props.user_message,
+        steps: [],
+        events: [],
+        sub_artifacts: [],
+        final_output: undefined,
+        metadata: undefined
+    }
+}
+
+
+
+export function addArtifactStep (artifact: Artifact, step:Step) {
+    artifact?.steps?.push(step)
+}
+
+
+export function storeArtifact (artifact:Artifact) {
+    cacheArtifact(artifact).then(r => {})
+}
+
+export async function getArtifacts (user_id: string, agent_name: string) {
+    return await getArtifactsFromCache(user_id, agent_name)
+}
