@@ -1,8 +1,9 @@
 import { AgentCard, AgentProps, AgentResponse } from "../../types/agent";
 import { composio } from "../../tools/composioClient";
 import { langfuse } from "../../services/loggingService";
-import {ComposioUtils} from "../../utils/agentUtils";
+import {ComposioUtils, getArtifacts} from "../../utils/agentUtils";
 import ComposioExecuter from "./composioExecuter";
+import {cleanStringList} from "../../utils/transformationUtils";
 
 
 
@@ -19,6 +20,7 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
         input: {
             user_message: props.user_message,
             prompt: props.prompt,
+            executionContext: cleanStringList(await getArtifacts(props.user.id as string, notionAgentCard.name)),
         },
     });
 

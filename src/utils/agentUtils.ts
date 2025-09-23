@@ -98,6 +98,5 @@ export function storeArtifact (artifact:Artifact) {
 }
 
 export async function getArtifacts (user_id: string, agent_name: string) {
-    const artifacts = await getArtifactsFromCache(agent_name, user_id)
-    return artifacts
+    return await getArtifactsFromCache(agent_name, user_id)
 }

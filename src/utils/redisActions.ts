@@ -3,7 +3,7 @@ import {User} from "../types/db";
 import {formatDate} from "./transformationUtils";
 import {Artifact} from "../types/artifacts";
 import {baseLogger} from "../services/loggingService";
-
+import {Context} from "node:vm";
 export async function cacheWhatsappMessage(user: User, actor: string, message: string, timestamp: string) {
 
     const redisKey = `conversation:${user.id}`;
@@ -34,13 +34,10 @@ export async function cacheArtifact(artifact: Artifact) {
 
 export async function getArtifactsFromCache(agent_name: string, user_id: string) {
     const redisKey = `artifact:${agent_name}:${user_id}`;
-    console.log("getting redis with:", redisKey); ///TODO: Remove these logs
     try {
-        const artifacts = await redisClient.lRange(redisKey, 0, 3);
-        console.log("artifacts found:", artifacts);
-        return artifacts;
+        return await redisClient.lRange(redisKey, 0, 3);
     } catch (err) {
-        console.error("Error fetching from Redis:", err);
+        await baseLogger.error("Error fetching from Redis:", err as Context);
         throw err;
     }
 }
