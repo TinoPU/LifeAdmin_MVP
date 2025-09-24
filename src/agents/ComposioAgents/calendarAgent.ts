@@ -100,10 +100,10 @@ export async function CalendarAgent(props: AgentProps): Promise<AgentResponse>
         span.end({output: response})
         return response
     } catch (error) {
-        span.event({ name: "notion.error", output: error instanceof Error ? error.message : String(error)});
+        span.event({ name: "calendar.error", output: error instanceof Error ? error.message : String(error)});
         props.context.agentStatus[calendarAgentCard.name] = {status: "failed", result: {}}
         span.end({output: "Kann gerade nicht digga"})
-        return { response: "Notion agent failed", data: error }
+        return { response: "Calendar agent failed", data: error }
 
     }
 }

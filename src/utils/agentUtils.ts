@@ -59,7 +59,9 @@ export const normalizeContent = (res: any): any => {
 export class ComposioUtils {
     private static toolconfig_dict: Record<string, string> = {
         GMAIL: "ac_IqSbnGGgCbXh",
-        NOTION: "ac_yQJRcnWZouqe"
+        NOTION: "ac_yQJRcnWZouqe",
+        GOOGLECALENDAR: "ac_8J-gEOt5Bn6c",
+        GOOGLE_MAPS: "ac_wyCZk7aoZ7oU"
     };
 
     public static getToolConfig(tool: string, defaultValue: string = "NOT_FOUND"): string {
