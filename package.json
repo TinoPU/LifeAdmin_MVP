@@ -25,6 +25,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "langfuse": "^3.37.2",
+    "openai": "^5.23.0",
     "phone-number-to-timezone": "^1.0.8",
     "redis": "^4.7.0"
   },
