@@ -1,7 +1,7 @@
 import { AgentCard, AgentProps, AgentResponse } from "../../types/agent";
 import { composio } from "../../tools/composioClient";
 import { langfuse } from "../../services/loggingService";
-import {ComposioUtils, getArtifacts} from "../../utils/agentUtils";
+import {ComposioUtils, condenseArtifactStrings, getArtifacts} from "../../utils/agentUtils";
 import ComposioExecuter from "./composioExecuter";
 import {cleanStringList} from "../../utils/transformationUtils";
 
@@ -14,13 +14,15 @@ export const notionAgentCard: AgentCard = {
 
 export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
 {
+    const context =  cleanStringList(condenseArtifactStrings(await getArtifacts(props.user.id as string, notionAgentCard.name)))
+
     ///Tracing
     const span = props.trace.span({
         name: "NotionAgent",
         input: {
             user_message: props.user_message,
             prompt: props.prompt,
-            executionContext: cleanStringList(await getArtifacts(props.user.id as string, notionAgentCard.name)),
+            executionContext: context
         },
     });
 
@@ -67,7 +69,7 @@ export async function NotionAgent(props: AgentProps): Promise<AgentResponse>
         const compiledChatPrompt = chatPrompt.compile({
             user_message: props.user_message,
             prompt: props.prompt || "",
-            executionContext: cleanStringList(await getArtifacts(props.user.id as string, notionAgentCard.name)),
+            executionContext: context
         });
 
         ///Agent Definition

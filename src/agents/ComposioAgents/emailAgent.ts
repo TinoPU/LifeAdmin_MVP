@@ -1,7 +1,7 @@
 import { AgentCard, AgentProps, AgentResponse } from "../../types/agent";
 import { composio } from "../../tools/composioClient";
 import { langfuse } from "../../services/loggingService";
-import {ComposioUtils, getArtifacts} from "../../utils/agentUtils";
+import {ComposioUtils, condenseArtifactStrings, getArtifacts} from "../../utils/agentUtils";
 import ComposioExecuter from "./composioExecuter";
 import {cleanStringList} from "../../utils/transformationUtils";
 
@@ -13,6 +13,7 @@ export const emailAgentCard: AgentCard = {
 
 export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
 {
+    const context = cleanStringList(condenseArtifactStrings(await getArtifacts(props.user.id as string, emailAgentCard.name)))
     ///Tracing
     const span = props.trace.span({
         name: "EmailAgent",
@@ -20,7 +21,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
             user_message: props.user_message,
             prompt: props.prompt,
             history: props.history,
-            executionContext: JSON.stringify(props.context),
+            executionContext: context,
         },
     });
 
@@ -68,7 +69,7 @@ export async function EmailAgent(props: AgentProps): Promise<AgentResponse>
         const compiledChatPrompt = chatPrompt.compile({
             user_message: props.user_message,
             prompt: props.prompt || "",
-            executionContext: cleanStringList(await getArtifacts(props.user.id as string, emailAgentCard.name)),
+            executionContext: context,
         });
 
         ///Agent Definition

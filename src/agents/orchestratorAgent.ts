@@ -2,7 +2,7 @@ import {Agent, AgentCard, ExecutionContext, OrchestratorResponse, UserContext} f
 import {langfuse} from "../services/loggingService";
 import {availableAgents} from "./agentRegistry";
 import {callAgent} from "../services/agentService";
-import {getArtifacts, storeArtifact} from "../utils/agentUtils";
+import {condenseArtifactStrings, getArtifacts, storeArtifact} from "../utils/agentUtils";
 import {Artifact} from "../types/artifacts";
 import {uuid} from "@supabase/supabase-js/dist/main/lib/helpers";
 import {UUID} from "../types/db";
@@ -14,10 +14,14 @@ export const orchestratorAgentCard: AgentCard = {
 }
 
 export async function OrchestratorAgent(user_message: string, execution_context: ExecutionContext, history:string[], user_context:UserContext, trace:any): Promise<OrchestratorResponse> {
+
+    const context = cleanStringList(condenseArtifactStrings(await getArtifacts(execution_context.user_id as string, orchestratorAgentCard.name)))
+
     const span = trace.span({
         name: "Orchestration",
         input: {
             userInput: user_message,
+            executionContext: context
         },
     });
     const chatPrompt = await langfuse.getPrompt("OrchestratorAgent", undefined, {
@@ -27,7 +31,7 @@ export async function OrchestratorAgent(user_message: string, execution_context:
 
     const compiledChatPrompt = chatPrompt.compile({
         userMessage: user_message,
-        executionContext: cleanStringList(await getArtifacts(execution_context.user_id as string, orchestratorAgentCard.name)),
+        executionContext: context,
         agents: availableAgents(),
         history: JSON.stringify(history, null,2),
         userContext: JSON.stringify(user_context, null, 2)

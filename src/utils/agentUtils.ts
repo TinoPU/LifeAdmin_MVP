@@ -86,11 +86,9 @@ export function createArtifact(agent: Agent, props: AgentProps): Artifact {
 }
 
 
-
 export function addArtifactStep (artifact: Artifact, step:Step) {
     artifact?.steps?.push(step)
 }
-
 
 export function storeArtifact (artifact:Artifact) {
     cacheArtifact(artifact).then(r => {})
@@ -98,5 +96,23 @@ export function storeArtifact (artifact:Artifact) {
 }
 
 export async function getArtifacts (user_id: string, agent_name: string) {
-    return await getArtifactsFromCache(agent_name, user_id)
+    const artifacts = await getArtifactsFromCache(agent_name, user_id)
+    const loaded_artifacts = []
+    for (const s in artifacts) {
+        let artifact = JSON.parse(s)
+        loaded_artifacts.push(artifact)
+    }
+    return loaded_artifacts
+}
+
+export function condenseArtifactStrings (artifacts:Artifact[]) {
+    const condensed_artifacts = []
+    for (const a of artifacts) {
+        let condensed_a = {
+            input: a.input,
+            final_output: a.final_output
+        }
+        condensed_artifacts.push(JSON.stringify(condensed_a, null, 2))
+    }
+    return condensed_artifacts
 }
