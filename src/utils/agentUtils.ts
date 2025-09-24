@@ -95,14 +95,9 @@ export function storeArtifact (artifact:Artifact) {
     logger.info("artifact Stored", {artifact: artifact})
 }
 
-export async function getArtifacts (user_id: string, agent_name: string) {
+export async function getArtifacts(user_id: string, agent_name: string) {
     const artifacts = await getArtifactsFromCache(agent_name, user_id)
-    const loaded_artifacts = []
-    for (const s in artifacts) {
-        let artifact = JSON.parse(s)
-        loaded_artifacts.push(artifact)
-    }
-    return loaded_artifacts
+    return artifacts.map(s => JSON.parse(s))
 }
 
 export function condenseArtifactStrings (artifacts:Artifact[]) {
