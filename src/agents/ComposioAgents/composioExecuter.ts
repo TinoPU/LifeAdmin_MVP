@@ -1,4 +1,4 @@
-import {Agent, AgentProps} from "../../types/agent";
+import {Agent, AgentMessage, AgentProps} from "../../types/agent";
 import {callAgent} from "../../services/agentService";
 import {composio} from "../../tools/composioClient";
 import {addArtifactStep, createArtifact, normalizeContent, storeArtifact} from "../../utils/agentUtils";
@@ -9,7 +9,7 @@ export default async function ComposioExecuter(agent: Agent, props: AgentProps, 
     const break_reasons = ["end_turn", "max_tokens", "stop_sequence", "pause_turn", "refusal"]
     let artifact = createArtifact(agent, props)
 
-    let continue_conversation = undefined
+    let local_context: AgentMessage[] = []
     let iteration = 0
     let stop_reason = ""
     let result = undefined
@@ -21,7 +21,7 @@ export default async function ComposioExecuter(agent: Agent, props: AgentProps, 
     };
 
     while (!break_reasons.includes(stop_reason) && iteration <5) {
-        const msg = await callAgent(agent, span, continue_conversation);
+        const msg = await callAgent(agent, span, local_context);
         iteration += 1
         stop_reason = msg.stop_reason
         const assistantText = msg.content?.[0]?.text;
@@ -33,9 +33,10 @@ export default async function ComposioExecuter(agent: Agent, props: AgentProps, 
             id: iteration,
             type: "agent" as const,
             status: "success" as const,
-            output: assistantText
+            output: msg.content
         }
         addArtifactStep(artifact,step)
+        local_context.push({role: "assistant" as const, content: msg.content || ""})
 
         if (stop_reason == "tool_use") {
             result = await composio.provider.handleToolCalls(
@@ -63,14 +64,11 @@ export default async function ComposioExecuter(agent: Agent, props: AgentProps, 
                             output: result
                         }
                         addArtifactStep(artifact,step)
+                        local_context.push({role: "user" as const, content: JSON.stringify(result, null, 2)|| ""})
                         return result;
                     },
                 });
                 span.event({name: "tool_called", input: msg, output: result})
-                continue_conversation = [
-                    {role: "assistant" as const, content: msg.content[0]?.text || ""},
-                    {role: "user" as const, content: JSON.stringify(result, null, 2) || ""}
-                ];
             }
     }
     const final_result = normalizeContent(result)

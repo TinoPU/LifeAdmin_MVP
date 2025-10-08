@@ -5,7 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const anthropic = new Anthropic();
 
-export async function callAgent(agent:Agent, trace:any, continue_conversation?:AgentMessage[]) {
+export async function callAgent(agent:Agent, trace:any, local_context?:AgentMessage[]) {
 
     let systemPrompt = "";
     const messages: { role: "user" | "assistant"; content: string }[] = [];
@@ -21,8 +21,8 @@ export async function callAgent(agent:Agent, trace:any, continue_conversation?:A
         }
     }
 
-    if (continue_conversation) {
-        for (const message of continue_conversation) {
+    if (local_context) {
+        for (const message of local_context) {
             messages.push(message)
         }
     }
