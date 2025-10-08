@@ -21,7 +21,9 @@ export async function OrchestratorAgent(user_message: string, execution_context:
         name: "Orchestration",
         input: {
             userInput: user_message,
-            executionContext: context
+            executionContext: context,
+            userContext: user_context,
+            conversationHistory: history
         },
     });
     const chatPrompt = await langfuse.getPrompt("OrchestratorAgent", undefined, {

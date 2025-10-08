@@ -15,6 +15,7 @@ export const calendarAgentCard: AgentCard = {
 export async function CalendarAgent(props: AgentProps): Promise<AgentResponse>
 {
     const context =  cleanStringList(condenseArtifactStrings(await getArtifacts(props.user.id as string, calendarAgentCard.name)))
+    const userContext = JSON.stringify(props.userContext, null, 2)
 
     ///Tracing
     const span = props.trace.span({
@@ -22,7 +23,8 @@ export async function CalendarAgent(props: AgentProps): Promise<AgentResponse>
         input: {
             user_message: props.user_message,
             prompt: props.prompt,
-            executionContext: context
+            executionContext: context,
+            userContext: userContext
         },
     });
 
@@ -69,7 +71,8 @@ export async function CalendarAgent(props: AgentProps): Promise<AgentResponse>
         const compiledChatPrompt = chatPrompt.compile({
             user_message: props.user_message,
             prompt: props.prompt || "",
-            executionContext: context
+            executionContext: context,
+            userContext: userContext
         });
 
         ///Agent Definition
@@ -104,6 +107,5 @@ export async function CalendarAgent(props: AgentProps): Promise<AgentResponse>
         props.context.agentStatus[calendarAgentCard.name] = {status: "failed", result: {}}
         span.end({output: "Kann gerade nicht digga"})
         return { response: "Calendar agent failed", data: error }
-
     }
 }

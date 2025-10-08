@@ -6,6 +6,7 @@ import {User} from "./db";
 export interface UserContext {
     name?: string,
     time_at_user_location: string
+    user_timezone?: number,
     language?: string
 }
 
@@ -110,6 +111,7 @@ export interface AgentProps {
     user_message: string,
     context: ExecutionContext,
     user: User
+    userContext?: UserContext
     history: string[],
     prompt?: string,
     trace: any

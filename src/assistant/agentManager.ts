@@ -74,6 +74,7 @@ export class AgentManager {
                 const agentProps: AgentProps = {
                     user_message: message,
                     context: executionContext,
+                    userContext: user_context,
                     history: history,
                     prompt: agentprompt,
                     trace:trace,
@@ -211,6 +212,7 @@ export class AgentManager {
                 const agentProps: AgentProps = {
                     user_message: message,
                     context: executionContext,
+                    userContext: user_context,
                     history: history,
                     prompt: agentprompt,
                     trace:trace,

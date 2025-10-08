@@ -48,6 +48,7 @@ export function constructUserContext (user: User) {
     const userContext: UserContext = {
         name: user.name,
         time_at_user_location: formatDate(userTime),
+        user_timezone: user.user_timezone,
         language: user.language
     }
 
