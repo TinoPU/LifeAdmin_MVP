@@ -67,9 +67,16 @@ export function formatGmailMessages(result: any) {
         const MAX_LENGTH = 2000;
         result.data.messages = messages.map((msg: any) => {
             let body = msg.messageText || msg.preview?.body || "";
+            const links = extractLinks(msg.messageText || "");
+
             if (body.length > MAX_LENGTH) {
                 body = msg.preview?.body ? msg.preview.body : body.slice(0, MAX_LENGTH) + "...";
             }
+
+            if (links.length > 0) {
+                body += "\n\nLinks:\n" + links.map((link: string) => `- ${link}`).join("\n");
+            }
+
             return {
                 messageId: msg.messageId,
                 sender: msg.sender,
@@ -89,8 +96,14 @@ export function formatSingleGmailMessage(result: any) {
         const MAX_LENGTH = 2000;
         let body = message.messageText || message.preview?.body || "";
 
+        const links = extractLinks(message.messageText || "");
+
         if (body.length > MAX_LENGTH) {
             body = message.preview?.body ? message.preview.body : body.slice(0, MAX_LENGTH) + "...";
+        }
+
+        if (links.length > 0) {
+            body += "\n\nLinks:\n" + links.map((link: string) => `- ${link}`).join("\n");
         }
 
         result.data = {
@@ -108,6 +121,17 @@ export function formatSingleGmailMessage(result: any) {
         };
     }
     return result;
+}
+
+export function extractLinks(text: string): string[] {
+    if (!text) return [];
+
+    // Regex to match URLs (http, https, and www)
+    const urlRegex = /https?:\/\/[^\s<>\[\]"]+|www\.[^\s<>\[\]"]+/gi;
+    const matches = text.match(urlRegex) || [];
+
+    // Remove duplicates and return
+    return [...new Set(matches)];
 }
 
 export function cleanStringList(input: string | string[]): string {
