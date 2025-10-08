@@ -2,7 +2,7 @@ import {Agent, AgentMessage, AgentProps} from "../../types/agent";
 import {callAgent} from "../../services/agentService";
 import {composio} from "../../tools/composioClient";
 import {addArtifactStep, createArtifact, normalizeContent, storeArtifact} from "../../utils/agentUtils";
-import {formatGmailMessages} from "../../utils/transformationUtils";
+import {formatGmailMessages, formatSingleGmailMessage} from "../../utils/transformationUtils";
 
 
 
@@ -19,6 +19,7 @@ export default async function ComposioExecuter(agent: Agent, props: AgentProps, 
     const afterExecuteHandlers: Record<string, (result: any) => any> = {
         GMAIL_FETCH_EMAILS: (result) => formatGmailMessages(result),
         GMAIL_LIST_DRAFTS: (result) => formatGmailMessages(result),
+        GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID: (result) => formatSingleGmailMessage(result)
     };
 
     while (!break_reasons.includes(stop_reason) && iteration <5) {

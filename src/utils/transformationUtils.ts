@@ -81,6 +81,35 @@ export function formatGmailMessages(result: any) {
     return result;
 }
 
+
+
+export function formatSingleGmailMessage(result: any) {
+    const message = result?.data;
+    if (message && typeof message === 'object') {
+        const MAX_LENGTH = 2000;
+        let body = message.messageText || message.preview?.body || "";
+
+        if (body.length > MAX_LENGTH) {
+            body = message.preview?.body ? message.preview.body : body.slice(0, MAX_LENGTH) + "...";
+        }
+
+        result.data = {
+            messageId: message.messageId,
+            sender: message.sender,
+            subject: message.subject,
+            body,
+            threadId: message.threadId,
+            to: message.to,
+            attachments: message.attachmentList?.map((att: any) => ({
+                filename: att.filename,
+                mimeType: att.mimeType,
+                attachmentId: att.attachmentId,
+            })) || [],
+        };
+    }
+    return result;
+}
+
 export function cleanStringList(input: string | string[]): string {
     return Array.isArray(input) ? input.join("\n") : input;
 }
