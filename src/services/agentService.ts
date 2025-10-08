@@ -2,13 +2,12 @@ import {defaultModelConfig} from "../config/modelConfig";
 import {Agent, AgentMessage} from "../types/agent";
 import Anthropic from "@anthropic-ai/sdk";
 
-
 const anthropic = new Anthropic();
 
 export async function callAgent(agent:Agent, trace:any, local_context?:AgentMessage[]) {
 
     let systemPrompt = "";
-    const messages: { role: "user" | "assistant"; content: string }[] = [];
+    const messages: AgentMessage[] = [];
 
     for (const m of agent.input) {
         if (m.role === "system") {

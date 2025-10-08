@@ -2,6 +2,8 @@ import {UUID} from "./message";
 import {modelConfig} from "../config/modelConfig";
 import {ChatPromptClient} from "langfuse";
 import {User} from "./db";
+import Anthropic from "@anthropic-ai/sdk";
+
 
 export interface UserContext {
     name?: string,
@@ -117,7 +119,6 @@ export interface AgentProps {
     trace: any
 }
 
-export interface AgentMessage {
-    role: "user" | "assistant",
-    content: string
-}
+
+export type AgentMessage =
+    Parameters<InstanceType<typeof Anthropic>["messages"]["create"]>[0]["messages"][number];

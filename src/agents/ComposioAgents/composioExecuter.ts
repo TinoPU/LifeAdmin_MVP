@@ -5,6 +5,7 @@ import {addArtifactStep, createArtifact, normalizeContent, storeArtifact} from "
 import {formatGmailMessages} from "../../utils/transformationUtils";
 
 
+
 export default async function ComposioExecuter(agent: Agent, props: AgentProps, span: any) {
     const break_reasons = ["end_turn", "max_tokens", "stop_sequence", "pause_turn", "refusal"]
     let artifact = createArtifact(agent, props)
@@ -56,19 +57,11 @@ export default async function ComposioExecuter(agent: Agent, props: AgentProps, 
                             }
                             result = handler(result);
                         }
-                        const step = {
-                            id: iteration + 0.1,
-                            type: "tool_use" as const,
-                            name: toolSlug,
-                            status: "success" as const,
-                            output: result
-                        }
-                        addArtifactStep(artifact,step)
-                        local_context.push({role: "user" as const, content: JSON.stringify(result, null, 2)|| ""})
                         return result;
                     },
                 });
                 span.event({name: "tool_called", input: msg, output: result})
+                local_context.push(...result)
             }
     }
     const final_result = normalizeContent(result)
