@@ -1,7 +1,37 @@
-### SETUP COMMANDS
-1. npm i
-2. npm run build 
-3. npm start
+## LifeAdmin MVP
+
+An agentic, chat-first personal task assistant. Users interact via WhatsApp and Telegram. The system orchestrates specialized agents (Task, Websearch, Response, Composio Email, etc.), persists tasks/reminders in Supabase, observes with Langfuse, and caches context with Redis.
+
+## Quick Start
+
+### Prerequisites
+- Node 18+ / npm
+- Supabase project (Postgres + anon/service keys)
+- Redis instance
+- Vercel (optional, for deployment)
+- Accounts/credentials for external providers you use (WhatsApp Business Cloud API, Telegram Bot, Composio)
+
+### Setup
+1) Install dependencies
+```bash
+npm i
+```
+
+2) Environment variables (.env)
+```env
+# Server
+PORT=4000
+NODE_ENV=development
+
+# WhatsApp Business Cloud
+WA_URL=https://graph.facebook.com/v21.0
+WA_PHONE_ID=your_phone_number_id
+WA_TOKEN=your_wa_access_token
+
+# Telegram Bot
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+# Optional: restrict bot to a single user id
+ALLOWED_TELEGRAM_ID=123456789
 
 ## Integrations
 
